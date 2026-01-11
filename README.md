@@ -173,10 +173,3 @@ See [claude.md](claude.md) for:
 - Rooms auto-expire after 1 hour
 - No file storage anywhere
 
-## License
-
-MIT
-
----
-
-**Built with Claude Code** following strict modular architecture and type safety principles.
