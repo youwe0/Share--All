@@ -144,7 +144,7 @@ export class WebRTCService {
     await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
-  sendData(data: ArrayBuffer | string): void {
+  sendData(data: ArrayBuffer): void {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
       console.error('Data channel is not open');
       return;

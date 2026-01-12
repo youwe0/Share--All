@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useSignaling } from "../hooks/useSignaling";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { useFileTransfer } from "../hooks/useFileTransfer";
@@ -34,7 +34,6 @@ export function Room() {
   const signaling = useSignaling();
   const webrtc = useWebRTC();
   const fileTransfer = useFileTransfer();
-  const [isInitiator, setIsInitiator] = useState(false);
 
   useEffect(() => {
     const signalingUrl =
@@ -85,7 +84,6 @@ export function Room() {
           async (message) => {
             const peerJoinedMsg = message as { peerId: string };
             setRemotePeerId(peerJoinedMsg.peerId);
-            setIsInitiator(true);
 
             webrtc.createDataChannel("fileTransfer");
             const offer = await webrtc.createOffer();
@@ -158,7 +156,7 @@ export function Room() {
     if (fileTransfer.progress) {
       updateProgress(fileTransfer.progress);
     }
-  }, [fileTransfer.progress]);
+  }, [fileTransfer.progress, updateProgress]);
 
   useEffect(() => {
     if (fileTransfer.isSending) {

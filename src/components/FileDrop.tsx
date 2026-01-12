@@ -1,4 +1,4 @@
-import { useRef, useState, DragEvent, ChangeEvent } from 'react';
+import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
 import { formatFileSize } from '../utils/formatters';
 
 interface FileDropProps {

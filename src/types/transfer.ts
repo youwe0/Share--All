@@ -21,42 +21,44 @@ export type ChunkProgress = {
   eta: number;
 }
 
-export enum TransferMessageType {
-  METADATA = 'metadata',
-  CHUNK = 'chunk',
-  COMPLETE = 'complete',
-  ERROR = 'error',
-  ACK = 'ack',
-}
+export const TransferMessageType = {
+  METADATA: 'metadata',
+  CHUNK: 'chunk',
+  COMPLETE: 'complete',
+  ERROR: 'error',
+  ACK: 'ack',
+} as const;
+
+export type TransferMessageType = typeof TransferMessageType[keyof typeof TransferMessageType];
 
 export interface BaseTransferMessage {
   type: TransferMessageType;
 }
 
 export interface MetadataMessage extends BaseTransferMessage {
-  type: TransferMessageType.METADATA;
+  type: typeof TransferMessageType.METADATA;
   metadata: FileMetadata;
 }
 
 export interface ChunkMessage extends BaseTransferMessage {
-  type: TransferMessageType.CHUNK;
+  type: typeof TransferMessageType.CHUNK;
   index: number;
   totalChunks: number;
   data: ArrayBuffer;
 }
 
 export interface CompleteMessage extends BaseTransferMessage {
-  type: TransferMessageType.COMPLETE;
+  type: typeof TransferMessageType.COMPLETE;
   checksum?: string;
 }
 
 export interface TransferErrorMessage extends BaseTransferMessage {
-  type: TransferMessageType.ERROR;
+  type: typeof TransferMessageType.ERROR;
   error: string;
 }
 
 export interface AckMessage extends BaseTransferMessage {
-  type: TransferMessageType.ACK;
+  type: typeof TransferMessageType.ACK;
 }
 
 export type TransferMessage =

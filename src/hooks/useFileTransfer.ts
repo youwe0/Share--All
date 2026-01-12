@@ -63,7 +63,7 @@ export function useFileTransfer(): UseFileTransferReturn {
 
         const metadataStr = JSON.stringify(metadataMessage);
         const metadataBuffer = new TextEncoder().encode(metadataStr);
-        await sendData(metadataBuffer);
+        await sendData(metadataBuffer.buffer);
 
         chunkServiceRef.current.setMetadata(metadata);
 
@@ -97,11 +97,16 @@ export function useFileTransfer(): UseFileTransferReturn {
 
           await sendData(combined.buffer);
 
-          const currentProgress = chunkServiceRef.current.calculateProgress(
-            chunkIndex,
-            totalChunks
-          );
-          setProgress(currentProgress);
+          // Throttle progress updates to avoid excessive re-renders
+          const now = Date.now();
+          if (now - lastProgressUpdateRef.current > 100) {
+            const currentProgress = chunkServiceRef.current.calculateProgress(
+              chunkIndex,
+              totalChunks
+            );
+            setProgress(currentProgress);
+            lastProgressUpdateRef.current = now;
+          }
 
           chunkIndex++;
         }
@@ -112,7 +117,7 @@ export function useFileTransfer(): UseFileTransferReturn {
 
         const completeStr = JSON.stringify(completeMessage);
         const completeBuffer = new TextEncoder().encode(completeStr);
-        await sendData(completeBuffer);
+        await sendData(completeBuffer.buffer);
 
         setIsTransferring(false);
         setIsSending(false);
@@ -145,11 +150,16 @@ export function useFileTransfer(): UseFileTransferReturn {
           if (header.type === TransferMessageType.CHUNK) {
             chunkServiceRef.current.addChunk(header.index, chunkData);
 
-            const currentProgress = chunkServiceRef.current.calculateProgress(
-              header.index,
-              header.totalChunks
-            );
-            setProgress(currentProgress);
+            // Throttle progress updates to avoid excessive re-renders
+            const now = Date.now();
+            if (now - lastProgressUpdateRef.current > 100) {
+              const currentProgress = chunkServiceRef.current.calculateProgress(
+                header.index,
+                header.totalChunks
+              );
+              setProgress(currentProgress);
+              lastProgressUpdateRef.current = now;
+            }
           }
         } else {
           // No newline means this is a JSON message (METADATA or COMPLETE)

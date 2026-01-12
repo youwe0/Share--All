@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import { generatePeerId } from '../utils/roomId';
 import type { AppError, AppMode, AppState, TransferState } from '../types/app';
 import type { ChunkProgress, FileMetadata } from '../types/transfer';
@@ -98,19 +98,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const value: AppContextValue = {
-    ...state,
-    setMode,
-    setRoomId,
-    setRemotePeerId,
-    setConnectionState,
-    setTransferState,
-    updateProgress,
-    setFileMetadata,
-    setError,
-    setIsRoomCreator,
-    resetApp,
-  };
+  const value: AppContextValue = useMemo(
+    () => ({
+      ...state,
+      setMode,
+      setRoomId,
+      setRemotePeerId,
+      setConnectionState,
+      setTransferState,
+      updateProgress,
+      setFileMetadata,
+      setError,
+      setIsRoomCreator,
+      resetApp,
+    }),
+    [
+      state,
+      setMode,
+      setRoomId,
+      setRemotePeerId,
+      setConnectionState,
+      setTransferState,
+      updateProgress,
+      setFileMetadata,
+      setError,
+      setIsRoomCreator,
+      resetApp,
+    ]
+  );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

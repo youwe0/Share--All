@@ -1,13 +1,15 @@
-export enum SignalingMessageType {
-  JOIN_ROOM = 'join_room',
-  ROOM_JOINED = 'room_joined',
-  PEER_JOINED = 'peer_joined',
-  OFFER = 'offer',
-  ANSWER = 'answer',
-  ICE_CANDIDATE = 'ice_candidate',
-  PEER_LEFT = 'peer_left',
-  ERROR = 'error',
-}
+export const SignalingMessageType = {
+  JOIN_ROOM: 'join_room',
+  ROOM_JOINED: 'room_joined',
+  PEER_JOINED: 'peer_joined',
+  OFFER: 'offer',
+  ANSWER: 'answer',
+  ICE_CANDIDATE: 'ice_candidate',
+  PEER_LEFT: 'peer_left',
+  ERROR: 'error',
+} as const;
+
+export type SignalingMessageType = typeof SignalingMessageType[keyof typeof SignalingMessageType];
 
 export interface BaseSignalingMessage {
   type: SignalingMessageType;
@@ -15,45 +17,45 @@ export interface BaseSignalingMessage {
 }
 
 export interface JoinRoomMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.JOIN_ROOM;
+  type: typeof SignalingMessageType.JOIN_ROOM;
   peerId: string;
 }
 
 export interface RoomJoinedMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.ROOM_JOINED;
+  type: typeof SignalingMessageType.ROOM_JOINED;
   peerId: string;
 }
 
 export interface PeerJoinedMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.PEER_JOINED;
+  type: typeof SignalingMessageType.PEER_JOINED;
   peerId: string;
 }
 
 export interface OfferMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.OFFER;
+  type: typeof SignalingMessageType.OFFER;
   offer: RTCSessionDescriptionInit;
   from: string;
 }
 
 export interface AnswerMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.ANSWER;
+  type: typeof SignalingMessageType.ANSWER;
   answer: RTCSessionDescriptionInit;
   from: string;
 }
 
 export interface IceCandidateMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.ICE_CANDIDATE;
+  type: typeof SignalingMessageType.ICE_CANDIDATE;
   candidate: RTCIceCandidateInit;
   from: string;
 }
 
 export interface PeerLeftMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.PEER_LEFT;
+  type: typeof SignalingMessageType.PEER_LEFT;
   peerId: string;
 }
 
 export interface ErrorMessage extends BaseSignalingMessage {
-  type: SignalingMessageType.ERROR;
+  type: typeof SignalingMessageType.ERROR;
   error: string;
 }
 

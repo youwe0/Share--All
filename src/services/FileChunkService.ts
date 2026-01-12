@@ -6,8 +6,6 @@ export class FileChunkService {
   private chunks: Map<number, ArrayBuffer> = new Map();
   private metadata: FileMetadata | null = null;
   private startTime: number = 0;
-  private lastUpdateTime: number = 0;
-  private lastBytesTransferred: number = 0;
 
   async *createChunks(
     file: File
@@ -54,8 +52,6 @@ export class FileChunkService {
   setMetadata(metadata: FileMetadata): void {
     this.metadata = metadata;
     this.startTime = Date.now();
-    this.lastUpdateTime = Date.now();
-    this.lastBytesTransferred = 0;
   }
 
   getMetadata(): FileMetadata | null {
@@ -109,9 +105,6 @@ export class FileChunkService {
 
     const percentage = (currentChunk / totalChunks) * 100;
 
-    this.lastUpdateTime = now;
-    this.lastBytesTransferred = bytesTransferred;
-
     return {
       chunksTransferred: currentChunk + 1,
       totalChunks,
@@ -127,8 +120,6 @@ export class FileChunkService {
     this.chunks.clear();
     this.metadata = null;
     this.startTime = 0;
-    this.lastUpdateTime = 0;
-    this.lastBytesTransferred = 0;
   }
 
   getChunkSize(): number {

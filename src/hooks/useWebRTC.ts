@@ -12,7 +12,7 @@ interface UseWebRTCReturn {
   createAnswer: (offer: RTCSessionDescriptionInit) => Promise<RTCSessionDescriptionInit>;
   setRemoteDescription: (description: RTCSessionDescriptionInit) => Promise<void>;
   addIceCandidate: (candidate: RTCIceCandidateInit) => Promise<void>;
-  sendData: (data: ArrayBuffer | string) => void;
+  sendData: (data: ArrayBuffer) => void;
   sendDataWithBackpressure: (data: ArrayBuffer) => Promise<void>;
   close: () => void;
 }
@@ -123,7 +123,7 @@ export function useWebRTC(): UseWebRTCReturn {
     }
   }, []);
 
-  const sendData = useCallback((data: ArrayBuffer | string) => {
+  const sendData = useCallback((data: ArrayBuffer) => {
     if (serviceRef.current) {
       serviceRef.current.sendData(data);
     }
