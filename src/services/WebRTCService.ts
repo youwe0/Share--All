@@ -158,20 +158,39 @@ export class WebRTCService {
       throw new Error('Data channel is not open');
     }
 
-    const BUFFER_THRESHOLD = 16 * 1024 * 1024;
+    const BUFFER_THRESHOLD = 16 * 1024 * 1024; // 16MB
+    const TIMEOUT_MS = 30000; // 30 seconds timeout
 
-    if (this.dataChannel.bufferedAmount > BUFFER_THRESHOLD) {
-      await new Promise<void>((resolve) => {
-        if (!this.dataChannel) return;
+    // Wait for buffer to drain if it's above threshold
+    while (this.dataChannel.bufferedAmount > BUFFER_THRESHOLD) {
+      await new Promise<void>((resolve, reject) => {
+        if (!this.dataChannel) {
+          reject(new Error('Data channel closed during backpressure wait'));
+          return;
+        }
 
-        const checkBuffer = () => {
-          if (this.dataChannel && this.dataChannel.bufferedAmount < BUFFER_THRESHOLD) {
-            this.dataChannel.removeEventListener('bufferedamountlow', checkBuffer);
-            resolve();
-          }
+        const channel = this.dataChannel;
+        const timeoutId = setTimeout(() => {
+          channel.removeEventListener('bufferedamountlow', onLow);
+          reject(new Error('Timeout waiting for buffer to drain'));
+        }, TIMEOUT_MS);
+
+        const onLow = () => {
+          clearTimeout(timeoutId);
+          channel.removeEventListener('bufferedamountlow', onLow);
+          resolve();
         };
 
-        this.dataChannel.addEventListener('bufferedamountlow', checkBuffer);
+        // Set the threshold and listen for the event
+        channel.bufferedAmountLowThreshold = BUFFER_THRESHOLD / 2; // Drain to half threshold
+        channel.addEventListener('bufferedamountlow', onLow);
+
+        // If buffer already drained while setting up, resolve immediately
+        if (channel.bufferedAmount <= BUFFER_THRESHOLD / 2) {
+          clearTimeout(timeoutId);
+          channel.removeEventListener('bufferedamountlow', onLow);
+          resolve();
+        }
       });
     }
 

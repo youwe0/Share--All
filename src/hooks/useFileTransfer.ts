@@ -95,7 +95,12 @@ export function useFileTransfer(): UseFileTransferReturn {
           combined.set(new Uint8Array(headerBuffer), 0);
           combined.set(new Uint8Array(chunk.data), headerBuffer.length);
 
-          await sendData(combined.buffer);
+          try {
+            await sendData(combined.buffer);
+          } catch (err) {
+            console.error(`Failed to send chunk ${chunkIndex}/${totalChunks}:`, err);
+            throw new Error(`Transfer failed at chunk ${chunkIndex}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+          }
 
           // Throttle progress updates to avoid excessive re-renders
           const now = Date.now();
@@ -109,6 +114,11 @@ export function useFileTransfer(): UseFileTransferReturn {
           }
 
           chunkIndex++;
+
+          // Log progress every 100 chunks for debugging
+          if (chunkIndex % 100 === 0) {
+            console.log(`Sent ${chunkIndex}/${totalChunks} chunks (${((chunkIndex / totalChunks) * 100).toFixed(1)}%)`);
+          }
         }
 
         const completeMessage: CompleteMessage = {
@@ -118,6 +128,11 @@ export function useFileTransfer(): UseFileTransferReturn {
         const completeStr = JSON.stringify(completeMessage);
         const completeBuffer = new TextEncoder().encode(completeStr);
         await sendData(completeBuffer.buffer);
+
+        console.log(`File transfer complete: Sent ${totalChunks} chunks (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
+
+        // Final progress update to show 100%
+        setProgress(chunkServiceRef.current.calculateProgress(totalChunks - 1, totalChunks));
 
         setIsTransferring(false);
         setIsSending(false);
@@ -159,6 +174,11 @@ export function useFileTransfer(): UseFileTransferReturn {
               );
               setProgress(currentProgress);
               lastProgressUpdateRef.current = now;
+            }
+
+            // Log progress every 100 chunks for debugging
+            if ((header.index + 1) % 100 === 0) {
+              console.log(`Received ${header.index + 1}/${header.totalChunks} chunks (${(((header.index + 1) / header.totalChunks) * 100).toFixed(1)}%)`);
             }
           }
         } else {
