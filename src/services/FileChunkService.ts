@@ -1,10 +1,13 @@
 import type { FileMetadata, ChunkProgress } from "../types/transfer";
 
 export class FileChunkService {
-  private readonly CHUNK_SIZE = 16384; 
+  // private readonly CHUNK_SIZE = 16384;
+  // private readonly CHUNK_SIZE = 16 * 1024;
+  private readonly CHUNK_SIZE = 64 * 1024;
   private chunks: Map<number, ArrayBuffer> = new Map();
   private metadata: FileMetadata | null = null;
   private startTime: number = 0;
+  private expectedTotalChunks: number = 0;
 
   async *createChunks(
     file: File
@@ -57,8 +60,14 @@ export class FileChunkService {
     return this.metadata;
   }
 
-  addChunk(index: number, data: ArrayBuffer): void {
+  addChunk(index: number, data: ArrayBuffer, totalChunks?: number): void {
     this.chunks.set(index, data);
+
+    // Track expected total chunks from the first chunk received
+    if (totalChunks !== undefined && this.expectedTotalChunks === 0) {
+      this.expectedTotalChunks = totalChunks;
+      console.log(`Expecting ${totalChunks} chunks total`);
+    }
   }
 
   hasChunk(index: number): boolean {
@@ -78,11 +87,57 @@ export class FileChunkService {
       throw new Error("Metadata not set");
     }
 
-    const sortedChunks = Array.from(this.chunks.entries())
-      .sort((a, b) => a[0] - b[0])
-      .map(([, data]) => data);
+    const totalChunks = Math.ceil(this.metadata.size / this.CHUNK_SIZE);
+
+    // CRITICAL: Verify all chunks are present before reassembly
+    if (this.chunks.size !== totalChunks) {
+      const missingChunks: number[] = [];
+      for (let i = 0; i < totalChunks; i++) {
+        if (!this.chunks.has(i)) {
+          missingChunks.push(i);
+        }
+      }
+
+      console.error(`Missing chunks: ${missingChunks.length} out of ${totalChunks}`);
+      console.error(`Missing chunk indices: ${missingChunks.slice(0, 10).join(', ')}${missingChunks.length > 10 ? '...' : ''}`);
+
+      throw new Error(
+        `File incomplete: received ${this.chunks.size}/${totalChunks} chunks. Missing ${missingChunks.length} chunks.`
+      );
+    }
+
+    // Verify chunk ordering and create sorted array
+    const sortedChunks: ArrayBuffer[] = [];
+    let totalSize = 0;
+
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = this.chunks.get(i);
+      if (!chunk) {
+        throw new Error(`Chunk ${i} is missing during reassembly`);
+      }
+      sortedChunks.push(chunk);
+      totalSize += chunk.byteLength;
+    }
+
+    // Verify total size matches expected size
+    if (totalSize !== this.metadata.size) {
+      console.warn(
+        `Size mismatch: expected ${this.metadata.size} bytes, got ${totalSize} bytes (diff: ${totalSize - this.metadata.size})`
+      );
+    }
+
+    console.log(
+      `Reassembling file: ${totalChunks} chunks, ${(totalSize / (1024 * 1024)).toFixed(2)} MB`
+    );
 
     const blob = new Blob(sortedChunks, { type: this.metadata.type });
+
+    // Verify blob size
+    if (blob.size !== totalSize) {
+      throw new Error(
+        `Blob size mismatch: expected ${totalSize} bytes, got ${blob.size} bytes`
+      );
+    }
 
     this.chunks.clear();
 
@@ -119,6 +174,7 @@ export class FileChunkService {
     this.chunks.clear();
     this.metadata = null;
     this.startTime = 0;
+    this.expectedTotalChunks = 0;
   }
 
   getChunkSize(): number {

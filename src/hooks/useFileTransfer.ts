@@ -198,7 +198,7 @@ export function useFileTransfer(): UseFileTransferReturn {
           const header = JSON.parse(headerStr);
 
           if (header.type === TransferMessageType.CHUNK) {
-            chunkServiceRef.current.addChunk(header.index, chunkData);
+            chunkServiceRef.current.addChunk(header.index, chunkData, header.totalChunks);
 
             // Throttle progress updates to avoid excessive re-renders
             const now = Date.now();
@@ -232,23 +232,47 @@ export function useFileTransfer(): UseFileTransferReturn {
             console.log('Received COMPLETE message from sender');
             const metadata = chunkServiceRef.current.getMetadata();
             if (metadata) {
-              const blob = chunkServiceRef.current.reassembleFile();
-              setReceivedFile({ blob, metadata });
-              chunkServiceRef.current.downloadFile(blob, metadata.name);
-              console.log('File received and downloaded:', metadata.name);
+              try {
+                // Attempt to reassemble file (will throw if chunks are missing)
+                const blob = chunkServiceRef.current.reassembleFile();
 
-              // Send ACK back to sender
-              if (sendData) {
-                const ackMessage: AckMessage = {
-                  type: TransferMessageType.ACK,
-                };
-                const ackStr = JSON.stringify(ackMessage);
-                const ackBuffer = new TextEncoder().encode(ackStr);
-                sendData(ackBuffer.buffer).then(() => {
-                  console.log('Sent ACK to sender');
-                }).catch((err) => {
-                  console.warn('Failed to send ACK to sender:', err);
-                });
+                // Verify blob size matches expected size
+                if (blob.size !== metadata.size) {
+                  throw new Error(
+                    `Final file size mismatch: expected ${metadata.size} bytes, got ${blob.size} bytes`
+                  );
+                }
+
+                console.log(
+                  `File reassembled successfully: ${metadata.name} (${(blob.size / (1024 * 1024)).toFixed(2)} MB)`
+                );
+
+                setReceivedFile({ blob, metadata });
+                chunkServiceRef.current.downloadFile(blob, metadata.name);
+                console.log('File received and downloaded:', metadata.name);
+
+                // Send ACK back to sender
+                if (sendData) {
+                  const ackMessage: AckMessage = {
+                    type: TransferMessageType.ACK,
+                  };
+                  const ackStr = JSON.stringify(ackMessage);
+                  const ackBuffer = new TextEncoder().encode(ackStr);
+                  sendData(ackBuffer.buffer).then(() => {
+                    console.log('Sent ACK to sender');
+                  }).catch((err) => {
+                    console.warn('Failed to send ACK to sender:', err);
+                  });
+                }
+              } catch (reassembleError) {
+                const errorMsg = reassembleError instanceof Error
+                  ? reassembleError.message
+                  : 'Failed to reassemble file';
+                console.error('File reassembly failed:', errorMsg);
+                setError(errorMsg);
+
+                // Don't send ACK if reassembly failed
+                return;
               }
             }
             setIsTransferring(false);
