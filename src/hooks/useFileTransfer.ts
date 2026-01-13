@@ -20,7 +20,8 @@ interface UseFileTransferReturn {
   receivedFile: { blob: Blob; metadata: FileMetadata } | null;
   sendFile: (
     file: File,
-    sendData: (data: ArrayBuffer) => Promise<void>
+    sendData: (data: ArrayBuffer) => Promise<void>,
+    getBufferedAmount: () => number
   ) => Promise<void>;
   handleIncomingData: (data: ArrayBuffer | string, sendData?: (data: ArrayBuffer) => Promise<void>) => void;
   cancelTransfer: () => void;
@@ -45,7 +46,7 @@ export function useFileTransfer(): UseFileTransferReturn {
   const ackReceivedRef = useRef(false);
 
   const sendFile = useCallback(
-    async (file: File, sendData: (data: ArrayBuffer) => Promise<void>) => {
+    async (file: File, sendData: (data: ArrayBuffer) => Promise<void>, getBufferedAmount: () => number) => {
       ackReceivedRef.current = false;
       const ackPromise = new Promise<void>((resolve) => {
         ackResolveRef.current = resolve;
@@ -134,7 +135,50 @@ export function useFileTransfer(): UseFileTransferReturn {
           }
         }
 
-        console.log(`All chunks sent. Waiting for buffer to flush...`);
+        console.log(`All chunks sent (${chunkIndex}/${totalChunks}). Waiting for buffer to flush...`);
+
+        // CRITICAL: Wait for buffer to drain before sending COMPLETE message
+        // This ensures all chunks arrive at receiver before COMPLETE message
+        const startFlushWait = Date.now();
+        const MAX_FLUSH_WAIT = 30000; // 30 seconds max wait
+        const POLL_INTERVAL = 100; // Check every 100ms
+        const TARGET_BUFFER = 64 * 1024; // Wait until buffer is under 64KB
+
+        // Poll the buffer until it's empty or mostly drained
+        const waitForBufferDrain = async (): Promise<void> => {
+          return new Promise((resolve) => {
+            const checkBuffer = () => {
+              const elapsed = Date.now() - startFlushWait;
+              const bufferedAmount = getBufferedAmount();
+
+              // Log current buffer status every second
+              if (elapsed > 0 && elapsed % 1000 < POLL_INTERVAL) {
+                console.log(`Waiting for buffer to drain: ${(bufferedAmount / (1024 * 1024)).toFixed(2)} MB buffered`);
+              }
+
+              // Timeout check
+              if (elapsed > MAX_FLUSH_WAIT) {
+                console.warn(`Buffer flush timeout after ${(elapsed / 1000).toFixed(1)}s. Buffered: ${(bufferedAmount / (1024 * 1024)).toFixed(2)} MB. Proceeding anyway.`);
+                resolve();
+                return;
+              }
+
+              // Check if buffer has drained sufficiently
+              if (bufferedAmount <= TARGET_BUFFER) {
+                console.log(`Buffer drained after ${(elapsed / 1000).toFixed(1)}s. Remaining: ${bufferedAmount} bytes`);
+                resolve();
+                return;
+              }
+
+              // Continue waiting
+              setTimeout(checkBuffer, POLL_INTERVAL);
+            };
+
+            checkBuffer();
+          });
+        };
+
+        await waitForBufferDrain();
 
         // Send complete message
         const completeMessage: CompleteMessage = {

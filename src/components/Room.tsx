@@ -181,7 +181,7 @@ export function Room() {
       }
 
       try {
-        await fileTransfer.sendFile(file, webrtc.sendDataWithBackpressure);
+        await fileTransfer.sendFile(file, webrtc.sendDataWithBackpressure, webrtc.getBufferedAmount);
       } catch (error) {
         setError({
           type: "transfer",

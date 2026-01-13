@@ -14,6 +14,7 @@ interface UseWebRTCReturn {
   addIceCandidate: (candidate: RTCIceCandidateInit) => Promise<void>;
   sendData: (data: ArrayBuffer) => void;
   sendDataWithBackpressure: (data: ArrayBuffer) => Promise<void>;
+  getBufferedAmount: () => number;
   close: () => void;
 }
 
@@ -137,6 +138,13 @@ export function useWebRTC(): UseWebRTCReturn {
     await serviceRef.current.sendDataWithBackpressure(data);
   }, []);
 
+  const getBufferedAmount = useCallback((): number => {
+    if (!serviceRef.current) {
+      return 0;
+    }
+    return serviceRef.current.getBufferedAmount();
+  }, []);
+
   const close = useCallback(() => {
     if (serviceRef.current) {
       serviceRef.current.close();
@@ -159,6 +167,7 @@ export function useWebRTC(): UseWebRTCReturn {
     addIceCandidate,
     sendData,
     sendDataWithBackpressure,
+    getBufferedAmount,
     close,
   };
 }
