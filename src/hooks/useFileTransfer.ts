@@ -273,52 +273,71 @@ export function useFileTransfer(): UseFileTransferReturn {
             setError(null);
             console.log('Receiving file:', metadataMsg.metadata.name, `(${(metadataMsg.metadata.size / (1024 * 1024)).toFixed(2)} MB)`);
           } else if (message.type === TransferMessageType.COMPLETE) {
-            console.log('Received COMPLETE message from sender');
+            console.log('✅ Received COMPLETE message from sender');
             const metadata = chunkServiceRef.current.getMetadata();
-            if (metadata) {
-              try {
-                // Attempt to reassemble file (will throw if chunks are missing)
-                const blob = chunkServiceRef.current.reassembleFile();
 
-                // Verify blob size matches expected size
-                if (blob.size !== metadata.size) {
-                  throw new Error(
-                    `Final file size mismatch: expected ${metadata.size} bytes, got ${blob.size} bytes`
-                  );
-                }
-
-                console.log(
-                  `File reassembled successfully: ${metadata.name} (${(blob.size / (1024 * 1024)).toFixed(2)} MB)`
-                );
-
-                setReceivedFile({ blob, metadata });
-                chunkServiceRef.current.downloadFile(blob, metadata.name);
-                console.log('File received and downloaded:', metadata.name);
-
-                // Send ACK back to sender
-                if (sendData) {
-                  const ackMessage: AckMessage = {
-                    type: TransferMessageType.ACK,
-                  };
-                  const ackStr = JSON.stringify(ackMessage);
-                  const ackBuffer = new TextEncoder().encode(ackStr);
-                  sendData(ackBuffer.buffer).then(() => {
-                    console.log('Sent ACK to sender');
-                  }).catch((err) => {
-                    console.warn('Failed to send ACK to sender:', err);
-                  });
-                }
-              } catch (reassembleError) {
-                const errorMsg = reassembleError instanceof Error
-                  ? reassembleError.message
-                  : 'Failed to reassemble file';
-                console.error('File reassembly failed:', errorMsg);
-                setError(errorMsg);
-
-                // Don't send ACK if reassembly failed
-                return;
-              }
+            if (!metadata) {
+              console.error('❌ No metadata found when COMPLETE received');
+              setError('No metadata found');
+              return;
             }
+
+            console.log(`📦 Attempting to reassemble file: ${metadata.name}`);
+
+            try {
+              // Attempt to reassemble file (will throw if chunks are missing)
+              const blob = chunkServiceRef.current.reassembleFile();
+
+              // Verify blob size matches expected size
+              if (blob.size !== metadata.size) {
+                throw new Error(
+                  `Final file size mismatch: expected ${metadata.size} bytes, got ${blob.size} bytes`
+                );
+              }
+
+              console.log(
+                `✅ File reassembled successfully: ${metadata.name} (${(blob.size / (1024 * 1024)).toFixed(2)} MB)`
+              );
+
+              setReceivedFile({ blob, metadata });
+              chunkServiceRef.current.downloadFile(blob, metadata.name);
+              console.log('💾 File download triggered:', metadata.name);
+
+              // Send ACK back to sender
+              console.log('📤 Preparing to send ACK to sender...');
+
+              if (!sendData) {
+                console.error('❌ sendData function not available! Cannot send ACK');
+              } else {
+                console.log('✅ sendData function is available');
+
+                const ackMessage: AckMessage = {
+                  type: TransferMessageType.ACK,
+                };
+                const ackStr = JSON.stringify(ackMessage);
+                const ackBuffer = new TextEncoder().encode(ackStr);
+
+                console.log(`📤 Sending ACK message (${ackBuffer.byteLength} bytes)`);
+
+                sendData(ackBuffer.buffer)
+                  .then(() => {
+                    console.log('✅ ACK sent successfully to sender');
+                  })
+                  .catch((err) => {
+                    console.error('❌ Failed to send ACK to sender:', err);
+                  });
+              }
+            } catch (reassembleError) {
+              const errorMsg = reassembleError instanceof Error
+                ? reassembleError.message
+                : 'Failed to reassemble file';
+              console.error('❌ File reassembly failed:', errorMsg, reassembleError);
+              setError(errorMsg);
+
+              // Don't send ACK if reassembly failed
+              return;
+            }
+
             setIsTransferring(false);
             setIsReceiving(false);
             setProgress(null);
