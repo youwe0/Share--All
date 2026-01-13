@@ -1,7 +1,7 @@
 import type { FileMetadata, ChunkProgress } from "../types/transfer";
 
 export class FileChunkService {
-  private readonly CHUNK_SIZE = 64 * 1024; // 64KB - optimal for large file transfers
+  private readonly CHUNK_SIZE = 16384; 
   private chunks: Map<number, ArrayBuffer> = new Map();
   private metadata: FileMetadata | null = null;
   private startTime: number = 0;

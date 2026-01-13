@@ -155,45 +155,124 @@ export class WebRTCService {
 
   async sendDataWithBackpressure(data: ArrayBuffer): Promise<void> {
     if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-      throw new Error('Data channel is not open');
+      throw new Error(`Data channel is not open. Current state: ${this.dataChannel?.readyState || 'null'}`);
     }
 
-    const BUFFER_THRESHOLD = 16 * 1024 * 1024; // 16MB
-    const TIMEOUT_MS = 30000; // 30 seconds timeout
+    // CRITICAL: Check buffer BEFORE attempting to send to prevent "send queue is full" error
+    const BUFFER_THRESHOLD = 8 * 1024 * 1024; // 8MB (reduced from 16MB for safety margin)
+    const TIMEOUT_MS = 60000; // 60 seconds timeout (increased for large files)
+    const POLL_INTERVAL_MS = 50; // Poll every 50ms
+    const MAX_BUFFER_SIZE = 16 * 1024 * 1024; // Max buffer size before we must wait
 
-    // Wait for buffer to drain if it's above threshold
-    while (this.dataChannel.bufferedAmount > BUFFER_THRESHOLD) {
-      await new Promise<void>((resolve, reject) => {
-        if (!this.dataChannel) {
-          reject(new Error('Data channel closed during backpressure wait'));
-          return;
+    // Calculate safe send size accounting for data we're about to add
+    const dataSize = data.byteLength;
+    const currentBuffered = this.dataChannel.bufferedAmount;
+    const totalAfterSend = currentBuffered + dataSize;
+
+    // If sending this data would exceed the maximum safe buffer size, wait first
+    if (totalAfterSend > MAX_BUFFER_SIZE) {
+      const targetThreshold = BUFFER_THRESHOLD / 2; // Drain to 4MB
+      let waitCount = 0;
+
+      console.log(`Buffer would overflow (${(totalAfterSend / (1024 * 1024)).toFixed(2)} MB > ${(MAX_BUFFER_SIZE / (1024 * 1024)).toFixed(2)} MB). Waiting for drain to ${(targetThreshold / (1024 * 1024)).toFixed(2)} MB...`);
+
+      // Wait for buffer to drain below target threshold
+      while (this.dataChannel.bufferedAmount > targetThreshold) {
+        // Check if data channel is still valid
+        if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+          throw new Error(`Data channel closed during backpressure wait. State: ${this.dataChannel?.readyState || 'null'}`);
+        }
+
+        // Check if peer connection is still valid
+        if (this.peerConnection && this.peerConnection.connectionState !== 'connected') {
+          throw new Error(`Peer connection is not connected. State: ${this.peerConnection.connectionState}`);
+        }
+
+        waitCount++;
+        if (waitCount % 10 === 0) {
+          console.log(`Still waiting... Buffer: ${(this.dataChannel.bufferedAmount / (1024 * 1024)).toFixed(2)} MB, Target: ${(targetThreshold / (1024 * 1024)).toFixed(2)} MB`);
         }
 
         const channel = this.dataChannel;
-        const timeoutId = setTimeout(() => {
-          channel.removeEventListener('bufferedamountlow', onLow);
-          reject(new Error('Timeout waiting for buffer to drain'));
-        }, TIMEOUT_MS);
 
-        const onLow = () => {
-          clearTimeout(timeoutId);
-          channel.removeEventListener('bufferedamountlow', onLow);
-          resolve();
-        };
+        await new Promise<void>((resolve, reject) => {
+          let isResolved = false;
+          let timeoutId: ReturnType<typeof setTimeout> | null = null;
+          let pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
-        // Set the threshold and listen for the event
-        channel.bufferedAmountLowThreshold = BUFFER_THRESHOLD / 2; // Drain to half threshold
-        channel.addEventListener('bufferedamountlow', onLow);
+          const cleanup = () => {
+            isResolved = true;
+            if (timeoutId !== null) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+            if (pollIntervalId !== null) {
+              clearInterval(pollIntervalId);
+              pollIntervalId = null;
+            }
+            if (channel && onLow) {
+              channel.removeEventListener('bufferedamountlow', onLow);
+            }
+          };
 
-        // If buffer already drained while setting up, resolve immediately
-        if (channel.bufferedAmount <= BUFFER_THRESHOLD / 2) {
-          clearTimeout(timeoutId);
-          channel.removeEventListener('bufferedamountlow', onLow);
-          resolve();
-        }
-      });
+          const onLow = () => {
+            if (!isResolved) {
+              cleanup();
+              resolve();
+            }
+          };
+
+          // Set timeout
+          timeoutId = setTimeout(() => {
+            if (!isResolved) {
+              cleanup();
+              reject(new Error(`Timeout waiting for buffer to drain. Current: ${channel.bufferedAmount}, Target: ${targetThreshold}`));
+            }
+          }, TIMEOUT_MS);
+
+          // Set the threshold BEFORE adding event listener to avoid race condition
+          channel.bufferedAmountLowThreshold = targetThreshold;
+
+          // Check immediately before setting up listener (race condition prevention)
+          if (channel.bufferedAmount <= targetThreshold) {
+            cleanup();
+            resolve();
+            return;
+          }
+
+          // Add event listener for bufferedamountlow event
+          channel.addEventListener('bufferedamountlow', onLow, { once: false });
+
+          // Check again immediately after adding listener (double-check race condition)
+          if (channel.bufferedAmount <= targetThreshold) {
+            cleanup();
+            resolve();
+            return;
+          }
+
+          // Fallback: Poll the buffer amount as backup (in case event doesn't fire)
+          pollIntervalId = setInterval(() => {
+            if (!channel || channel.readyState !== 'open') {
+              cleanup();
+              reject(new Error('Data channel closed during polling'));
+              return;
+            }
+
+            if (channel.bufferedAmount <= targetThreshold) {
+              cleanup();
+              resolve();
+            }
+          }, POLL_INTERVAL_MS);
+        });
+      }
     }
 
+    // Final check before sending
+    if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
+      throw new Error('Data channel closed before send');
+    }
+
+    // Send the data (buffer should now have space)
     this.dataChannel.send(data);
   }
 

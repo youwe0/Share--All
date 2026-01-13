@@ -2,13 +2,14 @@ import { useState, useCallback, useRef } from "react";
 import { FileChunkService } from "../services/FileChunkService";
 import {
   TransferMessageType,
+  type AckMessage,
   type ChunkMessage,
   type ChunkProgress,
   type CompleteMessage,
   type FileMetadata,
   type MetadataMessage,
   type TransferMessage,
-} from "../types/transfer";    
+} from "../types/transfer";
 
 interface UseFileTransferReturn {
   isTransferring: boolean;
@@ -21,7 +22,7 @@ interface UseFileTransferReturn {
     file: File,
     sendData: (data: ArrayBuffer) => Promise<void>
   ) => Promise<void>;
-  handleIncomingData: (data: ArrayBuffer | string) => void;
+  handleIncomingData: (data: ArrayBuffer | string, sendData?: (data: ArrayBuffer) => Promise<void>) => void;
   cancelTransfer: () => void;
   reset: () => void;
 }
@@ -40,9 +41,16 @@ export function useFileTransfer(): UseFileTransferReturn {
   const chunkServiceRef = useRef(new FileChunkService());
   const cancelledRef = useRef(false);
   const lastProgressUpdateRef = useRef(0);
+  const ackResolveRef = useRef<(() => void) | null>(null);
+  const ackReceivedRef = useRef(false);
 
   const sendFile = useCallback(
     async (file: File, sendData: (data: ArrayBuffer) => Promise<void>) => {
+      ackReceivedRef.current = false;
+      const ackPromise = new Promise<void>((resolve) => {
+        ackResolveRef.current = resolve;
+      });
+
       try {
         setIsTransferring(true);
         setIsSending(true);
@@ -65,10 +73,13 @@ export function useFileTransfer(): UseFileTransferReturn {
         const metadataBuffer = new TextEncoder().encode(metadataStr);
         await sendData(metadataBuffer.buffer);
 
+        console.log(`Starting file transfer: ${metadata.name} (${(metadata.size / (1024 * 1024)).toFixed(2)} MB)`);
+
         chunkServiceRef.current.setMetadata(metadata);
 
         let chunkIndex = 0;
         const totalChunks = chunkServiceRef.current.getTotalChunks(file.size);
+        const transferStartTime = Date.now();
 
         for await (const chunk of chunkServiceRef.current.createChunks(file)) {
           if (cancelledRef.current) {
@@ -117,10 +128,15 @@ export function useFileTransfer(): UseFileTransferReturn {
 
           // Log progress every 100 chunks for debugging
           if (chunkIndex % 100 === 0) {
-            console.log(`Sent ${chunkIndex}/${totalChunks} chunks (${((chunkIndex / totalChunks) * 100).toFixed(1)}%)`);
+            const elapsed = (Date.now() - transferStartTime) / 1000;
+            const speed = ((chunkIndex * chunk.data.byteLength) / elapsed / (1024 * 1024)).toFixed(2);
+            console.log(`Sent ${chunkIndex}/${totalChunks} chunks (${((chunkIndex / totalChunks) * 100).toFixed(1)}%) - ${speed} MB/s`);
           }
         }
 
+        console.log(`All chunks sent. Waiting for buffer to flush...`);
+
+        // Send complete message
         const completeMessage: CompleteMessage = {
           type: TransferMessageType.COMPLETE,
         };
@@ -129,7 +145,25 @@ export function useFileTransfer(): UseFileTransferReturn {
         const completeBuffer = new TextEncoder().encode(completeStr);
         await sendData(completeBuffer.buffer);
 
-        console.log(`File transfer complete: Sent ${totalChunks} chunks (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
+        console.log(`COMPLETE message sent. Waiting for receiver acknowledgment...`);
+
+        // Wait for ACK from receiver with timeout
+        const ACK_TIMEOUT = 30000; // 30 seconds
+        const ackTimeoutPromise = new Promise<void>((_, reject) => {
+          setTimeout(() => {
+            if (!ackReceivedRef.current) {
+              reject(new Error('Timeout waiting for receiver acknowledgment'));
+            }
+          }, ACK_TIMEOUT);
+        });
+
+        try {
+          await Promise.race([ackPromise, ackTimeoutPromise]);
+          console.log(`Transfer confirmed by receiver. File transfer complete: ${totalChunks} chunks (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
+        } catch (ackError) {
+          console.warn('Did not receive ACK from receiver, but all data was sent:', ackError);
+          // Continue anyway since all data was sent
+        }
 
         // Final progress update to show 100%
         setProgress(chunkServiceRef.current.calculateProgress(totalChunks - 1, totalChunks));
@@ -139,6 +173,7 @@ export function useFileTransfer(): UseFileTransferReturn {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "File transfer failed";
+        console.error('File transfer error:', errorMessage, err);
         setError(errorMessage);
         setIsTransferring(false);
         setIsSending(false);
@@ -147,7 +182,7 @@ export function useFileTransfer(): UseFileTransferReturn {
     []
   );
 
-  const handleIncomingData = useCallback((data: ArrayBuffer | string) => {
+  const handleIncomingData = useCallback((data: ArrayBuffer | string, sendData?: (data: ArrayBuffer) => Promise<void>) => {
     try {
       // All data comes as ArrayBuffer from WebRTC DataChannel
       if (data instanceof ArrayBuffer) {
@@ -182,7 +217,7 @@ export function useFileTransfer(): UseFileTransferReturn {
             }
           }
         } else {
-          // No newline means this is a JSON message (METADATA or COMPLETE)
+          // No newline means this is a JSON message (METADATA, COMPLETE, or ACK)
           const messageStr = new TextDecoder().decode(data);
           const message: TransferMessage = JSON.parse(messageStr);
 
@@ -192,18 +227,42 @@ export function useFileTransfer(): UseFileTransferReturn {
             setIsTransferring(true);
             setIsReceiving(true);
             setError(null);
-            console.log('Receiving file:', metadataMsg.metadata.name);
+            console.log('Receiving file:', metadataMsg.metadata.name, `(${(metadataMsg.metadata.size / (1024 * 1024)).toFixed(2)} MB)`);
           } else if (message.type === TransferMessageType.COMPLETE) {
+            console.log('Received COMPLETE message from sender');
             const metadata = chunkServiceRef.current.getMetadata();
             if (metadata) {
               const blob = chunkServiceRef.current.reassembleFile();
               setReceivedFile({ blob, metadata });
               chunkServiceRef.current.downloadFile(blob, metadata.name);
               console.log('File received and downloaded:', metadata.name);
+
+              // Send ACK back to sender
+              if (sendData) {
+                const ackMessage: AckMessage = {
+                  type: TransferMessageType.ACK,
+                };
+                const ackStr = JSON.stringify(ackMessage);
+                const ackBuffer = new TextEncoder().encode(ackStr);
+                sendData(ackBuffer.buffer).then(() => {
+                  console.log('Sent ACK to sender');
+                }).catch((err) => {
+                  console.warn('Failed to send ACK to sender:', err);
+                });
+              }
             }
             setIsTransferring(false);
             setIsReceiving(false);
             setProgress(null);
+          } else if (message.type === TransferMessageType.ACK) {
+            // Handle ACK message (for sender)
+            console.log('Received ACK from receiver');
+            if (!ackReceivedRef.current) {
+              ackReceivedRef.current = true;
+              if (ackResolveRef.current) {
+                ackResolveRef.current();
+              }
+            }
           }
         }
       } else if (typeof data === "string") {
@@ -222,10 +281,30 @@ export function useFileTransfer(): UseFileTransferReturn {
             const blob = chunkServiceRef.current.reassembleFile();
             setReceivedFile({ blob, metadata });
             chunkServiceRef.current.downloadFile(blob, metadata.name);
+
+            // Send ACK back to sender
+            if (sendData) {
+              const ackMessage: AckMessage = {
+                type: TransferMessageType.ACK,
+              };
+              const ackStr = JSON.stringify(ackMessage);
+              const ackBuffer = new TextEncoder().encode(ackStr);
+              sendData(ackBuffer.buffer).catch((err) => {
+                console.warn('Failed to send ACK to sender:', err);
+              });
+            }
           }
           setIsTransferring(false);
           setIsReceiving(false);
           setProgress(null);
+        } else if (message.type === TransferMessageType.ACK) {
+          // Handle ACK message (for sender)
+          if (!ackReceivedRef.current) {
+            ackReceivedRef.current = true;
+            if (ackResolveRef.current) {
+              ackResolveRef.current();
+            }
+          }
         }
       }
     } catch (err) {

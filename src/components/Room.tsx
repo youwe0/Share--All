@@ -68,7 +68,7 @@ export function Room() {
             });
           },
           onDataChannelMessage: (event) => {
-            fileTransfer.handleIncomingData(event.data);
+            fileTransfer.handleIncomingData(event.data, webrtc.sendDataWithBackpressure);
           },
           onConnectionStateChange: (state) => {
             setConnectionState(state);
