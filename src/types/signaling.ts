@@ -1,15 +1,16 @@
 export const SignalingMessageType = {
-  JOIN_ROOM: 'join_room',
-  ROOM_JOINED: 'room_joined',
-  PEER_JOINED: 'peer_joined',
-  OFFER: 'offer',
-  ANSWER: 'answer',
-  ICE_CANDIDATE: 'ice_candidate',
-  PEER_LEFT: 'peer_left',
-  ERROR: 'error',
+  JOIN_ROOM: "join_room",
+  ROOM_JOINED: "room_joined",
+  PEER_JOINED: "peer_joined",
+  OFFER: "offer",
+  ANSWER: "answer",
+  ICE_CANDIDATE: "ice_candidate",
+  PEER_LEFT: "peer_left",
+  ERROR: "error",
 } as const;
 
-export type SignalingMessageType = typeof SignalingMessageType[keyof typeof SignalingMessageType];
+export type SignalingMessageType =
+  (typeof SignalingMessageType)[keyof typeof SignalingMessageType];
 
 export interface BaseSignalingMessage {
   type: SignalingMessageType;

@@ -1,6 +1,6 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from './utils';
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onAnimationStart' | 'onDrag' | 'onDragEnd' | 'onDragStart'> {
   variant?: 'default' | 'glass' | 'gradient' | 'glow';

@@ -94,10 +94,9 @@ p2pshare/
 │   ├── components/         # UI components
 │   ├── utils/              # Helpers
 │   └── App.tsx             # Main app
-├── server/
-│   └── src/                # WebSocket signaling server
 └── README.md
 ```
+
 
 ## Configuration
 
@@ -107,7 +106,7 @@ p2pshare/
 
 ```env
 VITE_SIGNALING_URL=ws://localhost:3001
-```
+````
 
 **Server (`server/.env`):**
 
@@ -172,4 +171,3 @@ See [claude.md](claude.md) for:
 - Cryptographically random room IDs
 - Rooms auto-expire after 1 hour
 - No file storage anywhere
-

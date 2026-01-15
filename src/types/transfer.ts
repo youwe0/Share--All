@@ -19,18 +19,19 @@ export type ChunkProgress = {
   percentage: number;
   speed: number;
   eta: number;
-}
+};
 
 export const TransferMessageType = {
-  METADATA: 'metadata',
-  CHUNK: 'chunk',
-  COMPLETE: 'complete',
-  ERROR: 'error',
-  ACK: 'ack',
-  NACK: 'nack',
+  METADATA: "metadata",
+  CHUNK: "chunk",
+  COMPLETE: "complete",
+  ERROR: "error",
+  ACK: "ack",
+  NACK: "nack",
 } as const;
 
-export type TransferMessageType = typeof TransferMessageType[keyof typeof TransferMessageType];
+export type TransferMessageType =
+  (typeof TransferMessageType)[keyof typeof TransferMessageType];
 
 export interface BaseTransferMessage {
   type: TransferMessageType;

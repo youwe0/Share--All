@@ -32,5 +32,5 @@ export interface AppState {
   connectionState: RTCPeerConnectionState;
   transferState: TransferState;
   error: AppError | null;
-  isRoomCreator: boolean; // Track if user created the room or joined
+  isRoomCreator: boolean;
 }
