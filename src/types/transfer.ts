@@ -27,6 +27,7 @@ export const TransferMessageType = {
   COMPLETE: 'complete',
   ERROR: 'error',
   ACK: 'ack',
+  NACK: 'nack',
 } as const;
 
 export type TransferMessageType = typeof TransferMessageType[keyof typeof TransferMessageType];
@@ -61,9 +62,15 @@ export interface AckMessage extends BaseTransferMessage {
   type: typeof TransferMessageType.ACK;
 }
 
+export interface NackMessage extends BaseTransferMessage {
+  type: typeof TransferMessageType.NACK;
+  missingChunks: number[];
+}
+
 export type TransferMessage =
   | MetadataMessage
   | ChunkMessage
   | CompleteMessage
   | TransferErrorMessage
-  | AckMessage;
+  | AckMessage
+  | NackMessage;

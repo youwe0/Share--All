@@ -82,6 +82,31 @@ export class FileChunkService {
     return this.chunks.size === totalChunks;
   }
 
+  getMissingChunks(): number[] {
+    if (!this.metadata || this.expectedTotalChunks === 0) {
+      return [];
+    }
+
+    const totalChunks = this.expectedTotalChunks || Math.ceil(this.metadata.size / this.CHUNK_SIZE);
+    const missingChunks: number[] = [];
+
+    for (let i = 0; i < totalChunks; i++) {
+      if (!this.chunks.has(i)) {
+        missingChunks.push(i);
+      }
+    }
+
+    return missingChunks;
+  }
+
+  getReceivedChunkCount(): number {
+    return this.chunks.size;
+  }
+
+  getExpectedTotalChunks(): number {
+    return this.expectedTotalChunks;
+  }
+
   reassembleFile(): Blob {
     if (!this.metadata) {
       throw new Error("Metadata not set");

@@ -8,6 +8,7 @@ import {
   type CompleteMessage,
   type FileMetadata,
   type MetadataMessage,
+  type NackMessage,
   type TransferMessage,
 } from "../types/transfer";
 
@@ -44,13 +45,17 @@ export function useFileTransfer(): UseFileTransferReturn {
   const lastProgressUpdateRef = useRef(0);
   const ackResolveRef = useRef<(() => void) | null>(null);
   const ackReceivedRef = useRef(false);
+  const sendDataRef = useRef<((data: ArrayBuffer) => Promise<void>) | null>(null);
+  const currentFileRef = useRef<File | null>(null);
+  const nackResolveRef = useRef<(() => void) | null>(null);
 
   const sendFile = useCallback(
     async (file: File, sendData: (data: ArrayBuffer) => Promise<void>, getBufferedAmount: () => number) => {
       ackReceivedRef.current = false;
-      const ackPromise = new Promise<void>((resolve) => {
-        ackResolveRef.current = resolve;
-      });
+
+      // Store references for retransmission
+      sendDataRef.current = sendData;
+      currentFileRef.current = file;
 
       try {
         setIsTransferring(true);
@@ -133,6 +138,7 @@ export function useFileTransfer(): UseFileTransferReturn {
             const speed = ((chunkIndex * chunk.data.byteLength) / elapsed / (1024 * 1024)).toFixed(2);
             console.log(`Sent ${chunkIndex}/${totalChunks} chunks (${((chunkIndex / totalChunks) * 100).toFixed(1)}%) - ${speed} MB/s`);
           }
+
         }
 
         console.log(`All chunks sent (${chunkIndex}/${totalChunks}). Waiting for buffer to flush...`);
@@ -193,20 +199,55 @@ export function useFileTransfer(): UseFileTransferReturn {
 
         // Wait for ACK from receiver with timeout
         const ACK_TIMEOUT = 30000; // 30 seconds
-        const ackTimeoutPromise = new Promise<void>((_, reject) => {
-          setTimeout(() => {
-            if (!ackReceivedRef.current) {
-              reject(new Error('Timeout waiting for receiver acknowledgment'));
-            }
-          }, ACK_TIMEOUT);
-        });
 
-        try {
-          await Promise.race([ackPromise, ackTimeoutPromise]);
-          console.log(`Transfer confirmed by receiver. File transfer complete: ${totalChunks} chunks (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
-        } catch (ackError) {
-          console.warn('Did not receive ACK from receiver, but all data was sent:', ackError);
-          // Continue anyway since all data was sent
+        // Wait for ACK or NACK with retransmission support
+        const MAX_RETRANSMIT_ROUNDS = 5;
+        let retransmitRound = 0;
+
+        while (retransmitRound < MAX_RETRANSMIT_ROUNDS) {
+          try {
+            // Create a promise that resolves on ACK or rejects on timeout
+            const waitPromise = new Promise<'ack' | 'nack'>((resolve, reject) => {
+              const timeoutId = setTimeout(() => {
+                if (!ackReceivedRef.current) {
+                  reject(new Error('Timeout waiting for receiver acknowledgment'));
+                }
+              }, ACK_TIMEOUT);
+
+              // Set up ACK resolver
+              const originalAckResolve = ackResolveRef.current;
+              ackResolveRef.current = () => {
+                clearTimeout(timeoutId);
+                if (originalAckResolve) originalAckResolve();
+                resolve('ack');
+              };
+
+              // Set up NACK resolver
+              nackResolveRef.current = () => {
+                clearTimeout(timeoutId);
+                resolve('nack');
+              };
+            });
+
+            const result = await waitPromise;
+
+            if (result === 'ack') {
+              console.log(`Transfer confirmed by receiver. File transfer complete: ${totalChunks} chunks (${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
+              break;
+            }
+            // If NACK, the handleIncomingData will trigger retransmission
+            // and we'll loop again
+            retransmitRound++;
+            console.log(`Retransmission round ${retransmitRound} completed, waiting for next response...`);
+          } catch (ackError) {
+            console.warn('Did not receive ACK from receiver, but all data was sent:', ackError);
+            break;
+          }
+        }
+
+        if (retransmitRound >= MAX_RETRANSMIT_ROUNDS) {
+          console.error(`Failed after ${MAX_RETRANSMIT_ROUNDS} retransmission attempts`);
+          setError(`Transfer failed: receiver still missing chunks after ${MAX_RETRANSMIT_ROUNDS} retransmission attempts`);
         }
 
         // Final progress update to show 100%
@@ -225,6 +266,62 @@ export function useFileTransfer(): UseFileTransferReturn {
     },
     []
   );
+
+  // Helper function to retransmit specific chunks by re-reading from file
+  const retransmitChunks = useCallback(async (missingChunks: number[], sendData: (data: ArrayBuffer) => Promise<void>) => {
+    console.log(`📤 Retransmitting ${missingChunks.length} missing chunks: ${missingChunks.slice(0, 20).join(', ')}${missingChunks.length > 20 ? '...' : ''}`);
+
+    const file = currentFileRef.current;
+    if (!file) {
+      console.error('No file reference for retransmission');
+      return;
+    }
+
+    const chunkSize = chunkServiceRef.current.getChunkSize();
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    let retransmitted = 0;
+
+    for (const chunkIndex of missingChunks) {
+      // Read chunk directly from file
+      const offset = chunkIndex * chunkSize;
+      const blob = file.slice(offset, Math.min(offset + chunkSize, file.size));
+
+      try {
+        const arrayBuffer = await blob.arrayBuffer();
+
+        const messageStr = JSON.stringify({
+          type: TransferMessageType.CHUNK,
+          index: chunkIndex,
+          totalChunks: totalChunks,
+        });
+        const headerBuffer = new TextEncoder().encode(messageStr + "\n");
+
+        const combined = new Uint8Array(headerBuffer.length + arrayBuffer.byteLength);
+        combined.set(new Uint8Array(headerBuffer), 0);
+        combined.set(new Uint8Array(arrayBuffer), headerBuffer.length);
+
+        await sendData(combined.buffer);
+        retransmitted++;
+
+        if (retransmitted % 10 === 0) {
+          console.log(`Retransmitted ${retransmitted}/${missingChunks.length} chunks...`);
+        }
+      } catch (err) {
+        console.error(`Failed to retransmit chunk ${chunkIndex}:`, err);
+      }
+    }
+
+    console.log(`✅ Retransmitted ${retransmitted}/${missingChunks.length} chunks`);
+
+    // Send another COMPLETE message after retransmission
+    const completeMessage: CompleteMessage = {
+      type: TransferMessageType.COMPLETE,
+    };
+    const completeStr = JSON.stringify(completeMessage);
+    const completeBuffer = new TextEncoder().encode(completeStr);
+    await sendData(completeBuffer.buffer);
+    console.log('📤 Sent COMPLETE message after retransmission');
+  }, []);
 
   const handleIncomingData = useCallback((data: ArrayBuffer | string, sendData?: (data: ArrayBuffer) => Promise<void>) => {
     try {
@@ -284,8 +381,39 @@ export function useFileTransfer(): UseFileTransferReturn {
 
             console.log(`📦 Attempting to reassemble file: ${metadata.name}`);
 
+            // Check for missing chunks before attempting reassembly
+            const missingChunks = chunkServiceRef.current.getMissingChunks();
+
+            if (missingChunks.length > 0) {
+              console.warn(`⚠️ Missing ${missingChunks.length} chunks: ${missingChunks.slice(0, 10).join(', ')}${missingChunks.length > 10 ? '...' : ''}`);
+
+              // Send NACK to request retransmission
+              if (sendData) {
+                const nackMessage: NackMessage = {
+                  type: TransferMessageType.NACK,
+                  missingChunks: missingChunks,
+                };
+                const nackStr = JSON.stringify(nackMessage);
+                const nackBuffer = new TextEncoder().encode(nackStr);
+
+                console.log(`📤 Sending NACK requesting ${missingChunks.length} chunks`);
+
+                sendData(nackBuffer.buffer)
+                  .then(() => {
+                    console.log('✅ NACK sent successfully to sender');
+                  })
+                  .catch((err) => {
+                    console.error('❌ Failed to send NACK to sender:', err);
+                  });
+              } else {
+                console.error('❌ sendData function not available! Cannot send NACK');
+                setError(`Missing ${missingChunks.length} chunks and cannot request retransmission`);
+              }
+              return;
+            }
+
             try {
-              // Attempt to reassemble file (will throw if chunks are missing)
+              // Attempt to reassemble file (all chunks should be present now)
               const blob = chunkServiceRef.current.reassembleFile();
 
               // Verify blob size matches expected size
@@ -341,6 +469,24 @@ export function useFileTransfer(): UseFileTransferReturn {
             setIsTransferring(false);
             setIsReceiving(false);
             setProgress(null);
+          } else if (message.type === TransferMessageType.NACK) {
+            // Handle NACK message (for sender) - receiver is requesting missing chunks
+            const nackMsg = message as NackMessage;
+            console.log(`📥 Received NACK from receiver requesting ${nackMsg.missingChunks.length} chunks`);
+
+            if (sendDataRef.current) {
+              retransmitChunks(nackMsg.missingChunks, sendDataRef.current)
+                .then(() => {
+                  if (nackResolveRef.current) {
+                    nackResolveRef.current();
+                  }
+                })
+                .catch((err) => {
+                  console.error('❌ Failed to retransmit chunks:', err);
+                });
+            } else {
+              console.error('❌ sendData function not available for retransmission');
+            }
           } else if (message.type === TransferMessageType.ACK) {
             // Handle ACK message (for sender)
             console.log('Received ACK from receiver');
