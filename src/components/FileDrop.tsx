@@ -1,8 +1,8 @@
-import { useRef, useState, type DragEvent, type ChangeEvent } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileIcon, X, CheckCircle2, HardDrive } from 'lucide-react';
-import { formatFileSize } from '../utils/formatters';
-import { cn } from './ui/utils';
+import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Upload, X, CheckCircle2, HardDrive } from "lucide-react";
+import { formatFileSize } from "../utils/formatters";
+import { cn } from "./ui/utils";
 
 interface FileDropProps {
   onFileSelect: (file: File) => void;
@@ -59,17 +59,18 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
     e.stopPropagation();
     setSelectedFile(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const getFileTypeIcon = (type: string) => {
-    if (type.startsWith('image/')) return '🖼️';
-    if (type.startsWith('video/')) return '🎬';
-    if (type.startsWith('audio/')) return '🎵';
-    if (type.includes('pdf')) return '📄';
-    if (type.includes('zip') || type.includes('rar') || type.includes('7z')) return '📦';
-    return '📁';
+    if (type.startsWith("image/")) return "🖼️";
+    if (type.startsWith("video/")) return "🎬";
+    if (type.startsWith("audio/")) return "🎵";
+    if (type.includes("pdf")) return "📄";
+    if (type.includes("zip") || type.includes("rar") || type.includes("7z"))
+      return "📦";
+    return "📁";
   };
 
   return (
@@ -84,35 +85,35 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
         onDrop={handleDrop}
         onClick={handleClick}
         className={cn(
-          'relative rounded-2xl overflow-hidden cursor-pointer',
-          'transition-all duration-300',
-          disabled && 'opacity-50 cursor-not-allowed'
+          "relative rounded-2xl overflow-hidden cursor-pointer",
+          "transition-all duration-300",
+          disabled && "opacity-50 cursor-not-allowed"
         )}
       >
         {/* Background with grid pattern */}
         <div
           className={cn(
-            'absolute inset-0 transition-opacity duration-300',
-            isDragging ? 'opacity-100' : 'opacity-50'
+            "absolute inset-0 transition-opacity duration-300",
+            isDragging ? "opacity-100" : "opacity-50"
           )}
           style={{
             backgroundImage: `
               linear-gradient(to right, rgba(59, 130, 246, 0.05) 1px, transparent 1px),
               linear-gradient(to bottom, rgba(59, 130, 246, 0.05) 1px, transparent 1px)
             `,
-            backgroundSize: '24px 24px',
+            backgroundSize: "24px 24px",
           }}
         />
 
         {/* Main drop area */}
         <div
           className={cn(
-            'relative border-2 border-dashed rounded-2xl p-10',
-            'transition-all duration-300',
+            "relative border-2 border-dashed rounded-2xl p-10",
+            "transition-all duration-300",
             isDragging
-              ? 'border-dark-accent bg-dark-accent/5 scale-[1.02]'
-              : 'border-dark-border hover:border-dark-accent/50 hover:bg-dark-surface/50',
-            selectedFile && 'border-dark-success/50 bg-dark-success/5'
+              ? "border-dark-accent bg-dark-accent/5 scale-[1.02]"
+              : "border-dark-border hover:border-dark-accent/50 hover:bg-dark-surface/50",
+            selectedFile && "border-dark-success/50 bg-dark-success/5"
           )}
         >
           <input
@@ -136,11 +137,13 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
                   className="relative mb-6"
                 >
                   <div className="w-20 h-20 rounded-2xl bg-dark-success/10 flex items-center justify-center">
-                    <span className="text-4xl">{getFileTypeIcon(selectedFile.type)}</span>
+                    <span className="text-4xl">
+                      {getFileTypeIcon(selectedFile.type)}
+                    </span>
                   </div>
                   <motion.div
                     initial={{ scale: 0 }}
@@ -192,22 +195,22 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
               >
                 {/* Upload icon with animation */}
                 <motion.div
-                  animate={isDragging ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  animate={
+                    isDragging ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }
+                  }
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   className="relative mb-6"
                 >
                   <div
                     className={cn(
-                      'w-20 h-20 rounded-2xl flex items-center justify-center transition-colors duration-300',
-                      isDragging
-                        ? 'bg-dark-accent/20'
-                        : 'bg-dark-surface'
+                      "w-20 h-20 rounded-2xl flex items-center justify-center transition-colors duration-300",
+                      isDragging ? "bg-dark-accent/20" : "bg-dark-surface"
                     )}
                   >
                     <Upload
                       className={cn(
-                        'w-8 h-8 transition-colors duration-300',
-                        isDragging ? 'text-dark-accent' : 'text-dark-muted'
+                        "w-8 h-8 transition-colors duration-300",
+                        isDragging ? "text-dark-accent" : "text-dark-muted"
                       )}
                     />
                   </div>
@@ -225,7 +228,11 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
                         className="absolute inset-0 rounded-2xl border-2 border-dark-accent/20"
                         initial={{ scale: 1, opacity: 1 }}
                         animate={{ scale: 1.5, opacity: 0 }}
-                        transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          delay: 0.3,
+                        }}
                       />
                     </>
                   )}
@@ -234,12 +241,14 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
                 {/* Text */}
                 <div className="text-center">
                   <p className="text-dark-text font-semibold text-lg mb-2">
-                    {isDragging ? 'Drop your file here' : 'Drop a file or click to browse'}
+                    {isDragging
+                      ? "Drop your file here"
+                      : "Drop a file or click to browse"}
                   </p>
                   <p className="text-dark-muted text-sm">
                     {isDragging
-                      ? 'Release to select this file'
-                      : 'Supports files of any size'}
+                      ? "Release to select this file"
+                      : "Supports files of any size"}
                   </p>
                 </div>
 
@@ -267,7 +276,7 @@ export function FileDrop({ onFileSelect, disabled = false }: FileDropProps) {
               exit={{ opacity: 0 }}
               className="absolute inset-0 pointer-events-none rounded-2xl"
               style={{
-                boxShadow: 'inset 0 0 60px rgba(59, 130, 246, 0.1)',
+                boxShadow: "inset 0 0 60px rgba(59, 130, 246, 0.1)",
               }}
             />
           )}
