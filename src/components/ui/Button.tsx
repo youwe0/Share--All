@@ -22,7 +22,7 @@ const variants: Record<ButtonVariant, string> = {
     shadow-lg shadow-dark-accent/20
   `,
   secondary: `
-    bg-dark-surface text-dark-text
+    bg-dark-surface text-dark-text cursor-pointer
     border border-dark-border
     hover:bg-dark-surface-hover hover:border-dark-border-hover
   `,

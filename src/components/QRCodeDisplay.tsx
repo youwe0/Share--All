@@ -1,10 +1,10 @@
-import QRCode from 'qrcode';
-import { cn } from './ui/utils';
-import { Button } from './ui';
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Check, QrCode, Share2 } from 'lucide-react';
-import type { QRCodeData } from '../types/signaling';
+import QRCode from "qrcode";
+import { cn } from "./ui/utils";
+import { Button } from "./ui";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Check, QrCode, Share2 } from "lucide-react";
+import type { QRCodeData } from "../types/signaling";
 
 interface QRCodeDisplayProps {
   data: QRCodeData;
@@ -12,7 +12,7 @@ interface QRCodeDisplayProps {
 }
 
 export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,17 +22,17 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
         setIsLoading(true);
         const jsonString = JSON.stringify(data);
         const dataUrl = await QRCode.toDataURL(jsonString, {
-          errorCorrectionLevel: 'H',
+          errorCorrectionLevel: "H",
           margin: 2,
           width: 300,
           color: {
-            dark: '#FFFFFF',
-            light: '#030712',
+            dark: "#FFFFFF",
+            light: "#030712",
           },
         });
         setQrDataUrl(dataUrl);
       } catch (error) {
-        console.error('Error generating QR code:', error);
+        console.error("Error generating QR code:", error);
       } finally {
         setIsLoading(false);
       }
@@ -47,7 +47,7 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      console.error("Failed to copy:", error);
     }
   };
 
@@ -55,12 +55,12 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'P2P Share Room',
+          title: "P2P Share Room",
           text: `Join my P2P Share room: ${roomId}`,
           url: window.location.href,
         });
       } catch (error) {
-        console.error('Share failed:', error);
+        console.error("Share failed:", error);
       }
     } else {
       copyRoomId();
@@ -93,7 +93,8 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
           <div
             className="absolute inset-0 blur-2xl opacity-30"
             style={{
-              background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+              background:
+                "radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)",
             }}
           />
 
@@ -101,16 +102,17 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
           <motion.div
             className="relative rounded-2xl p-1"
             style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5))',
+              background:
+                "linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5))",
             }}
             animate={{
               background: [
-                'linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5))',
-                'linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.5))',
-                'linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5))',
+                "linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5))",
+                "linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.5))",
+                "linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5))",
               ],
             }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
           >
             <div className="bg-dark-bg rounded-xl p-4">
               <AnimatePresence mode="wait">
@@ -159,14 +161,14 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
             </code>
           </div>
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={copyRoomId}
             className={cn(
-              'p-3 rounded-xl transition-colors',
+              "p-3 rounded-xl transition-colors",
               copied
-                ? 'bg-dark-success/10 text-dark-success'
-                : 'bg-dark-surface hover:bg-dark-surface-hover text-dark-muted hover:text-dark-text'
+                ? "bg-dark-success/10 text-dark-success"
+                : "bg-dark-surface hover:bg-dark-surface-hover text-dark-muted hover:text-dark-text"
             )}
           >
             <AnimatePresence mode="wait">
@@ -194,7 +196,7 @@ export function QRCodeDisplay({ data, roomId }: QRCodeDisplayProps) {
         </div>
 
         {/* Share button (for mobile) */}
-        {'share' in navigator && (
+        {"share" in navigator && (
           <Button
             variant="secondary"
             className="w-full"
