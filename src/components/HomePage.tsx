@@ -57,9 +57,9 @@ export function HomePage() {
               variants={fadeInUp}
               className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
             >
-              <span className="text-dark-text">Serverless.</span>
+              <span className="text-gradient">Serverless.</span>
               <br />
-              <span className="text-gradient">Secure. Instant.</span>
+              <span className="text-dark-text">Secure. Instant.</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -311,7 +311,7 @@ export function HomePage() {
         <footer className="py-8 px-4 border-t border-dark-border">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-lavender to-rose flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="font-semibold text-dark-text">P2P Share</span>

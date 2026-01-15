@@ -15,10 +15,11 @@ export function GridBackground({
   children,
   ...props
 }: GridBackgroundProps) {
+  // Lavender Dusk colors
   const colorValue =
     color === "accent"
-      ? "rgba(59, 130, 246, 0.08)"
-      : "rgba(156, 163, 175, 0.05)";
+      ? "rgba(105, 104, 166, 0.12)"  // Lavender
+      : "rgba(152, 152, 168, 0.06)"; // Muted purple-gray
 
   const getPattern = () => {
     switch (variant) {
@@ -55,14 +56,14 @@ export function GridBackground({
         style={getPattern()}
       />
 
-      {/* Fade overlay */}
+      {/* Fade overlay - Lavender Dusk dark background */}
       {fade && (
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background: `
-              radial-gradient(ellipse at center, transparent 0%, #030712 70%),
-              linear-gradient(to bottom, transparent 60%, #030712 100%)
+              radial-gradient(ellipse at center, transparent 0%, #0a0a14 70%),
+              linear-gradient(to bottom, transparent 60%, #0a0a14 100%)
             `,
           }}
         />
@@ -82,28 +83,30 @@ export function HeroGlow({ className }: { className?: string }) {
         className
       )}
     >
-      {/* Primary glow */}
+      {/* Primary glow - Lavender */}
       <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-150 opacity-30"
+        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-150 opacity-40"
         style={{
           background:
-            "radial-gradient(ellipse at center, rgba(59, 130, 246, 0.3) 0%, transparent 70%)",
+            "radial-gradient(ellipse at center, rgba(105, 104, 166, 0.4) 0%, transparent 70%)",
         }}
       />
 
-      {/* Secondary glows */}
+      {/* Secondary glow - Rose */}
       <div
-        className="absolute top-20 left-1/4 w-100 h-100 opacity-20"
+        className="absolute top-20 left-1/4 w-100 h-100 opacity-25"
         style={{
           background:
-            "radial-gradient(circle at center, rgba(139, 92, 246, 0.4) 0%, transparent 60%)",
+            "radial-gradient(circle at center, rgba(207, 152, 147, 0.5) 0%, transparent 60%)",
         }}
       />
+
+      {/* Tertiary glow - Deep Teal */}
       <div
-        className="absolute top-20 right-1/4 w-100 h-100 opacity-20"
+        className="absolute top-20 right-1/4 w-100 h-100 opacity-25"
         style={{
           background:
-            "radial-gradient(circle at center, rgba(6, 182, 212, 0.4) 0%, transparent 60%)",
+            "radial-gradient(circle at center, rgba(8, 80, 120, 0.5) 0%, transparent 60%)",
         }}
       />
     </div>

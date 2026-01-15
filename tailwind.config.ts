@@ -5,39 +5,95 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Lavender Dusk primary palette
+        lavender: {
+          DEFAULT: '#6968A6',
+          light: '#8584c0',
+          dark: '#54538a',
+          50: '#f5f5fa',
+          100: '#e8e8f3',
+          200: '#d4d4e8',
+          300: '#b5b4d4',
+          400: '#8f8ebc',
+          500: '#6968A6',
+          600: '#5a5994',
+          700: '#4a4a7a',
+          800: '#3f3f65',
+          900: '#363654',
+        },
+        rose: {
+          DEFAULT: '#CF9893',
+          light: '#dbb0ac',
+          dark: '#b87d78',
+          50: '#fdf6f5',
+          100: '#fbeae9',
+          200: '#f7d8d6',
+          300: '#f0bdb9',
+          400: '#e5a39d',
+          500: '#CF9893',
+          600: '#b87d78',
+          700: '#9a6662',
+          800: '#7f5552',
+          900: '#6a4847',
+        },
+        teal: {
+          DEFAULT: '#085078',
+          light: '#0a6a9e',
+          dark: '#063a58',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#b9e5fe',
+          300: '#7cd1fd',
+          400: '#36b9fa',
+          500: '#0c9eeb',
+          600: '#087fc9',
+          700: '#085078',
+          800: '#0b4565',
+          900: '#0f3a54',
+        },
         dark: {
-          // Deep blacks and charcoals
-          bg: '#030712',           // Near black
-          'bg-secondary': '#0a0f1a', // Slightly lighter
-          surface: '#111827',      // Card backgrounds
-          'surface-hover': '#1f2937', // Hover states
-          border: '#1f2937',       // Subtle borders
-          'border-hover': '#374151', // Hover borders
+          // Lavender Dusk backgrounds
+          bg: '#0a0a14',              // Deep purple-black
+          'bg-secondary': '#12121f',   // Slightly lighter
+          surface: '#1a1a2e',          // Card backgrounds
+          'surface-hover': '#252540',  // Hover states
+          border: '#2a2a45',           // Subtle borders with purple tint
+          'border-hover': '#3d3d5c',   // Hover borders
 
           // Text hierarchy
-          text: '#f9fafb',         // Primary text
-          'text-secondary': '#e5e7eb', // Secondary text
-          muted: '#9ca3af',        // Muted text
-          subtle: '#6b7280',       // Very subtle text
+          text: '#f5f5f7',             // Primary text
+          'text-secondary': '#e0e0e5', // Secondary text
+          muted: '#9898a8',            // Muted text (purple-gray)
+          subtle: '#6a6a7a',           // Very subtle text
 
-          // Brand accent - Electric blue with glow potential
-          accent: '#3b82f6',       // Primary accent
-          'accent-light': '#60a5fa', // Light accent
-          'accent-dark': '#2563eb', // Dark accent
-          'accent-glow': '#3b82f680', // Glow effect
+          // Brand accent - Lavender
+          accent: '#6968A6',           // Primary accent (lavender)
+          'accent-light': '#8584c0',   // Light accent
+          'accent-dark': '#54538a',    // Dark accent
+          'accent-glow': 'rgba(105, 104, 166, 0.5)', // Glow effect
+
+          // Secondary accent - Rose
+          secondary: '#CF9893',        // Rose accent
+          'secondary-light': '#dbb0ac',
+          'secondary-glow': 'rgba(207, 152, 147, 0.5)',
+
+          // Tertiary accent - Deep Teal
+          tertiary: '#085078',         // Deep teal
+          'tertiary-light': '#0a6a9e',
+          'tertiary-glow': 'rgba(8, 80, 120, 0.5)',
 
           // Status colors
-          success: '#10b981',
-          'success-glow': '#10b98140',
-          error: '#ef4444',
-          'error-glow': '#ef444440',
-          warning: '#f59e0b',
-          'warning-glow': '#f59e0b40',
+          success: '#4ade80',
+          'success-glow': 'rgba(74, 222, 128, 0.4)',
+          error: '#f87171',
+          'error-glow': 'rgba(248, 113, 113, 0.4)',
+          warning: '#fbbf24',
+          'warning-glow': 'rgba(251, 191, 36, 0.4)',
 
-          // Gradient stops
-          'gradient-start': '#3b82f6',
-          'gradient-mid': '#8b5cf6',
-          'gradient-end': '#06b6d4',
+          // Gradient stops (Lavender Dusk)
+          'gradient-start': '#6968A6',  // Lavender
+          'gradient-mid': '#CF9893',    // Rose
+          'gradient-end': '#085078',    // Deep Teal
         },
       },
       fontFamily: {
@@ -47,16 +103,22 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-mesh': 'linear-gradient(to right, #3b82f610 1px, transparent 1px), linear-gradient(to bottom, #3b82f610 1px, transparent 1px)',
-        'hero-gradient': 'radial-gradient(ellipse 80% 50% at 50% -20%, #3b82f615, transparent)',
-        'glow-conic': 'conic-gradient(from 180deg at 50% 50%, #3b82f620 0deg, #8b5cf620 120deg, #06b6d420 240deg, #3b82f620 360deg)',
+        'gradient-mesh': 'linear-gradient(to right, rgba(105, 104, 166, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(105, 104, 166, 0.1) 1px, transparent 1px)',
+        'hero-gradient': 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(105, 104, 166, 0.15), transparent)',
+        'glow-conic': 'conic-gradient(from 180deg at 50% 50%, rgba(105, 104, 166, 0.2) 0deg, rgba(207, 152, 147, 0.2) 120deg, rgba(8, 80, 120, 0.2) 240deg, rgba(105, 104, 166, 0.2) 360deg)',
+        // Lavender Dusk gradients
+        'lavender-dusk': 'linear-gradient(135deg, #6968A6 0%, #CF9893 50%, #085078 100%)',
+        'lavender-rose': 'linear-gradient(135deg, #6968A6 0%, #CF9893 100%)',
+        'rose-teal': 'linear-gradient(135deg, #CF9893 0%, #085078 100%)',
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(59, 130, 246, 0.3)',
-        'glow-lg': '0 0 40px rgba(59, 130, 246, 0.4)',
-        'glow-success': '0 0 20px rgba(16, 185, 129, 0.3)',
-        'glow-error': '0 0 20px rgba(239, 68, 68, 0.3)',
-        'inner-glow': 'inset 0 0 20px rgba(59, 130, 246, 0.1)',
+        'glow': '0 0 20px rgba(105, 104, 166, 0.3)',
+        'glow-lg': '0 0 40px rgba(105, 104, 166, 0.4)',
+        'glow-rose': '0 0 20px rgba(207, 152, 147, 0.3)',
+        'glow-teal': '0 0 20px rgba(8, 80, 120, 0.3)',
+        'glow-success': '0 0 20px rgba(74, 222, 128, 0.3)',
+        'glow-error': '0 0 20px rgba(248, 113, 113, 0.3)',
+        'inner-glow': 'inset 0 0 20px rgba(105, 104, 166, 0.1)',
       },
       animation: {
         'shimmer': 'shimmer 2s infinite',

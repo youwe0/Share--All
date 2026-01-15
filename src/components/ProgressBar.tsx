@@ -85,8 +85,8 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
               transition={{ duration: 0.5, ease: "easeOut" }}
               style={{
                 background: isComplete
-                  ? "linear-gradient(90deg, #10b981, #34d399)"
-                  : "linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4)",
+                  ? "linear-gradient(90deg, #4ade80, #34d399)"
+                  : "linear-gradient(90deg, #6968A6, #CF9893, #085078)",
                 backgroundSize: "200% 100%",
               }}
             >
@@ -108,8 +108,8 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
                 className="absolute inset-0 rounded-full"
                 style={{
                   boxShadow: isComplete
-                    ? "0 0 20px rgba(16, 185, 129, 0.5)"
-                    : "0 0 20px rgba(59, 130, 246, 0.5)",
+                    ? "0 0 20px rgba(74, 222, 128, 0.5)"
+                    : "0 0 20px rgba(105, 104, 166, 0.5)",
                 }}
               />
             </motion.div>
