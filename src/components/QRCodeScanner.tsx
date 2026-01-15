@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, CameraOff, AlertCircle, Hash, QrCode, ArrowRight } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import type { QRCodeData } from '../types/signaling';
 import { isQRCodeData } from '../utils/validation';
+import { Button } from './ui';
 
 interface QRCodeScannerProps {
   onScanSuccess: (data: QRCodeData) => void;
@@ -68,7 +71,7 @@ export function QRCodeScanner({ onScanSuccess, onScanError }: QRCodeScannerProps
           onScanError(errorMsg);
         }
       }
-    } catch (err) {
+    } catch {
       const errorMsg = 'Invalid QR code data';
       setError(errorMsg);
       if (onScanError) {
@@ -91,91 +94,188 @@ export function QRCodeScanner({ onScanSuccess, onScanError }: QRCodeScannerProps
   };
 
   return (
-    <div className="bg-dark-surface border border-dark-border rounded-xl p-6">
-      <h3 className="text-dark-text text-xl font-semibold mb-4 text-center">
-        Join Room
-      </h3>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-strong rounded-2xl overflow-hidden"
+    >
+      {/* Header */}
+      <div className="p-6 text-center border-b border-dark-border/50">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-dark-accent/10 mb-4">
+          <QrCode className="w-6 h-6 text-dark-accent" />
+        </div>
+        <h3 className="text-xl font-semibold text-dark-text mb-1">
+          Scan QR Code
+        </h3>
+        <p className="text-dark-muted text-sm">
+          Point your camera at the sender's QR code
+        </p>
+      </div>
 
-      {!useManual ? (
-        <>
-          <div id="qr-reader" className="mb-4 rounded-lg overflow-hidden"></div>
-
-          {error && (
-            <div className="bg-dark-error bg-opacity-10 border border-dark-error text-dark-error rounded-lg p-3 mb-4 text-sm">
-              {error}
-            </div>
-          )}
-
-          {!isScanning ? (
-            <button
-              onClick={startScanning}
-              className="w-full bg-dark-success hover:bg-green-600 text-dark-text font-semibold
-                       py-3 px-6 rounded-lg transition-colors duration-200 mb-3"
+      {/* Content */}
+      <div className="p-6">
+        <AnimatePresence mode="wait">
+          {!useManual ? (
+            <motion.div
+              key="scanner"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
             >
-              Start Camera
-            </button>
+              {/* QR Scanner container */}
+              <div className="relative mb-6">
+                <div
+                  id="qr-reader"
+                  className="rounded-xl overflow-hidden bg-dark-bg/50"
+                  style={{ minHeight: isScanning ? '300px' : '0' }}
+                />
+
+                {/* Scanner overlay when not active */}
+                {!isScanning && (
+                  <div className="bg-dark-bg/50 rounded-xl p-10 border-2 border-dashed border-dark-border flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-dark-surface flex items-center justify-center mb-4">
+                      <Camera className="w-8 h-8 text-dark-muted" />
+                    </div>
+                    <p className="text-dark-muted text-sm text-center">
+                      Click the button below to activate your camera
+                    </p>
+                  </div>
+                )}
+
+                {/* Scanning indicator */}
+                {isScanning && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    {/* Corner brackets */}
+                    <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-dark-accent rounded-tl-lg" />
+                    <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-dark-accent rounded-tr-lg" />
+                    <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-dark-accent rounded-bl-lg" />
+                    <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-dark-accent rounded-br-lg" />
+
+                    {/* Scanning line animation */}
+                    <motion.div
+                      className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-dark-accent to-transparent"
+                      animate={{ top: ['20%', '80%', '20%'] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Error message */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-4"
+                  >
+                    <div className="bg-dark-error/10 border border-dark-error/30 text-dark-error rounded-xl p-4 text-sm flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Action buttons */}
+              <div className="space-y-3">
+                {!isScanning ? (
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    onClick={startScanning}
+                    icon={<Camera className="w-4 h-4" />}
+                  >
+                    Start Camera
+                  </Button>
+                ) : (
+                  <Button
+                    variant="danger"
+                    className="w-full"
+                    onClick={() => {
+                      if (scannerRef.current) {
+                        scannerRef.current.stop().catch(console.error);
+                        setIsScanning(false);
+                      }
+                    }}
+                    icon={<CameraOff className="w-4 h-4" />}
+                  >
+                    Stop Camera
+                  </Button>
+                )}
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setUseManual(true)}
+                  icon={<Hash className="w-4 h-4" />}
+                >
+                  Enter Room ID Manually
+                </Button>
+              </div>
+            </motion.div>
           ) : (
-            <button
-              onClick={() => {
-                if (scannerRef.current) {
-                  scannerRef.current.stop().catch(console.error);
-                  setIsScanning(false);
-                }
-              }}
-              className="w-full bg-dark-error hover:bg-red-600 text-dark-text font-semibold
-                       py-3 px-6 rounded-lg transition-colors duration-200 mb-3"
+            <motion.div
+              key="manual"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
             >
-              Stop Camera
-            </button>
+              {/* Manual entry form */}
+              <div className="mb-6">
+                <label className="block text-dark-muted text-sm mb-2 font-medium">
+                  Room ID
+                </label>
+                <div className="relative">
+                  <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-dark-muted" />
+                  <input
+                    type="text"
+                    value={manualRoomId}
+                    onChange={(e) => setManualRoomId(e.target.value)}
+                    placeholder="Enter the room ID shared with you"
+                    className="w-full bg-dark-bg border border-dark-border text-dark-text
+                             rounded-xl pl-12 pr-4 py-4 focus:border-dark-accent focus:ring-2
+                             focus:ring-dark-accent/20 outline-none transition-all
+                             placeholder:text-dark-subtle font-mono"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleManualEntry();
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-dark-subtle text-xs mt-2">
+                  The room ID is usually a 21-character alphanumeric string
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="space-y-3">
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={handleManualEntry}
+                  disabled={!manualRoomId.trim()}
+                  icon={<ArrowRight className="w-4 h-4" />}
+                  iconPosition="right"
+                >
+                  Join Room
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setUseManual(false)}
+                  icon={<QrCode className="w-4 h-4" />}
+                >
+                  Use QR Scanner Instead
+                </Button>
+              </div>
+            </motion.div>
           )}
-
-          <button
-            onClick={() => setUseManual(true)}
-            className="w-full bg-dark-bg border border-dark-border hover:border-dark-accent
-                     text-dark-text py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-          >
-            Enter Room ID Manually
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="mb-4">
-            <label className="block text-dark-muted text-sm mb-2">Room ID:</label>
-            <input
-              type="text"
-              value={manualRoomId}
-              onChange={(e) => setManualRoomId(e.target.value)}
-              placeholder="Enter room ID"
-              className="w-full bg-dark-bg border border-dark-border text-dark-text
-                       rounded-lg px-4 py-3 focus:border-dark-accent focus:ring-1
-                       focus:ring-dark-accent outline-none transition-colors"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleManualEntry();
-                }
-              }}
-            />
-          </div>
-
-          <button
-            onClick={handleManualEntry}
-            disabled={!manualRoomId.trim()}
-            className="w-full bg-dark-success hover:bg-green-600 text-dark-text font-semibold
-                     py-3 px-6 rounded-lg transition-colors duration-200 mb-3
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Join Room
-          </button>
-
-          <button
-            onClick={() => setUseManual(false)}
-            className="w-full bg-dark-bg border border-dark-border hover:border-dark-accent
-                     text-dark-text py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-          >
-            Use QR Scanner
-          </button>
-        </>
-      )}
-    </div>
+        </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }
