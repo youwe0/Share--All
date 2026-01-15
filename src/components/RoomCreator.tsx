@@ -1,8 +1,8 @@
-import { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { Loader2, Zap } from "lucide-react";
-import { generateRoomId } from "../utils/roomId";
 import { useAppContext } from "../hooks/useAppContext";
+import { generateRoomId } from "../utils/roomId";
 import { GridBackground, HeroGlow } from "./ui";
 
 export function RoomCreator() {
@@ -51,7 +51,7 @@ export function RoomCreator() {
           />
 
           {/* Logo */}
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
             <Zap className="w-8 h-8 text-white" />
           </div>
         </motion.div>

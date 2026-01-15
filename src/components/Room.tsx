@@ -1,13 +1,15 @@
+import { FileDrop } from "./FileDrop";
+import { useWebRTC } from "../hooks/useWebRTC";
+import { ProgressBar } from "./ProgressBar";
+import { useSignaling } from "../hooks/useSignaling";
+import { QRCodeDisplay } from "./QRCodeDisplay";
+import { useAppContext } from "../hooks/useAppContext";
+import { formatFileSize } from "../utils/formatters";
+import { useFileTransfer } from "../hooks/useFileTransfer";
+import { ConnectionStatus } from "./ConnectionStatus";
 import { useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Download, Zap, Users, Send } from "lucide-react";
-import { useSignaling } from "../hooks/useSignaling";
-import { useWebRTC } from "../hooks/useWebRTC";
-import { useFileTransfer } from "../hooks/useFileTransfer";
-import { FileDrop } from "./FileDrop";
-import { ProgressBar } from "./ProgressBar";
-import { ConnectionStatus } from "./ConnectionStatus";
-import { QRCodeDisplay } from "./QRCodeDisplay";
+import { Button, Card, GridBackground, HeroGlow } from "./ui";
 import {
   SignalingMessageType,
   type AnswerMessage,
@@ -15,9 +17,14 @@ import {
   type JoinRoomMessage,
   type OfferMessage,
 } from "../types/signaling";
-import { useAppContext } from "../hooks/useAppContext";
-import { Button, Card, GridBackground, HeroGlow } from "./ui";
-import { formatFileSize } from "../utils/formatters";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  Zap,
+  Users,
+  Send,
+} from "lucide-react";
 
 export function Room() {
   const {
@@ -72,7 +79,10 @@ export function Room() {
             });
           },
           onDataChannelMessage: (event) => {
-            fileTransfer.handleIncomingData(event.data, webrtc.sendDataWithBackpressure);
+            fileTransfer.handleIncomingData(
+              event.data,
+              webrtc.sendDataWithBackpressure
+            );
           },
           onConnectionStateChange: (state) => {
             setConnectionState(state);
@@ -185,7 +195,11 @@ export function Room() {
       }
 
       try {
-        await fileTransfer.sendFile(file, webrtc.sendDataWithBackpressure, webrtc.getBufferedAmount);
+        await fileTransfer.sendFile(
+          file,
+          webrtc.sendDataWithBackpressure,
+          webrtc.getBufferedAmount
+        );
       } catch (error) {
         setError({
           type: "transfer",
@@ -230,12 +244,16 @@ export function Room() {
               </Button>
               <div className="h-6 w-px bg-dark-border" />
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-linear-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-dark-text">Transfer Room</h1>
-                  <p className="text-dark-muted text-sm">Room: {roomId?.slice(0, 8)}...</p>
+                  <h1 className="text-xl font-semibold text-dark-text">
+                    Transfer Room
+                  </h1>
+                  <p className="text-dark-muted text-sm">
+                    Room: {roomId?.slice(0, 8)}...
+                  </p>
                 </div>
               </div>
             </div>
@@ -246,22 +264,29 @@ export function Room() {
               animate={{ opacity: 1, scale: 1 }}
               className={`
                 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2
-                ${connectionState === 'connected'
-                  ? 'bg-dark-success/10 text-dark-success border border-dark-success/30'
-                  : connectionState === 'connecting'
-                    ? 'bg-dark-warning/10 text-dark-warning border border-dark-warning/30'
-                    : 'bg-dark-surface text-dark-muted border border-dark-border'
+                ${
+                  connectionState === "connected"
+                    ? "bg-dark-success/10 text-dark-success border border-dark-success/30"
+                    : connectionState === "connecting"
+                    ? "bg-dark-warning/10 text-dark-warning border border-dark-warning/30"
+                    : "bg-dark-surface text-dark-muted border border-dark-border"
                 }
               `}
             >
-              <span className={`w-2 h-2 rounded-full ${
-                connectionState === 'connected' ? 'bg-dark-success' :
-                connectionState === 'connecting' ? 'bg-dark-warning animate-pulse' :
-                'bg-dark-muted'
-              }`} />
-              {connectionState === 'connected' ? 'Connected' :
-               connectionState === 'connecting' ? 'Connecting...' :
-               'Waiting'}
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  connectionState === "connected"
+                    ? "bg-dark-success"
+                    : connectionState === "connecting"
+                    ? "bg-dark-warning animate-pulse"
+                    : "bg-dark-muted"
+                }`}
+              />
+              {connectionState === "connected"
+                ? "Connected"
+                : connectionState === "connecting"
+                ? "Connecting..."
+                : "Waiting"}
             </motion.div>
           </motion.div>
 
@@ -274,7 +299,10 @@ export function Room() {
               transition={{ delay: 0.1 }}
               className="lg:col-span-1 space-y-6"
             >
-              <ConnectionStatus state={connectionState} remotePeerId={remotePeerId} />
+              <ConnectionStatus
+                state={connectionState}
+                remotePeerId={remotePeerId}
+              />
 
               {/* Room info card */}
               <Card variant="glass" className="p-5">
@@ -285,7 +313,7 @@ export function Room() {
                   <div>
                     <h3 className="text-dark-text font-medium">Room Status</h3>
                     <p className="text-dark-muted text-sm">
-                      {remotePeerId ? '2 peers connected' : 'Waiting for peer'}
+                      {remotePeerId ? "2 peers connected" : "Waiting for peer"}
                     </p>
                   </div>
                 </div>
@@ -309,11 +337,15 @@ export function Room() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-dark-muted">Transfer mode</span>
-                    <span className="text-dark-text font-medium">P2P Direct</span>
+                    <span className="text-dark-text font-medium">
+                      P2P Direct
+                    </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-dark-muted">Encryption</span>
-                    <span className="text-dark-success font-medium">DTLS Enabled</span>
+                    <span className="text-dark-success font-medium">
+                      DTLS Enabled
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -363,14 +395,20 @@ export function Room() {
                           <div
                             className="absolute inset-0 pointer-events-none"
                             style={{
-                              background: 'radial-gradient(ellipse at center top, rgba(16, 185, 129, 0.15) 0%, transparent 60%)',
+                              background:
+                                "radial-gradient(ellipse at center top, rgba(16, 185, 129, 0.15) 0%, transparent 60%)",
                             }}
                           />
 
                           <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 200,
+                              damping: 15,
+                              delay: 0.2,
+                            }}
                             className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-dark-success/10 mb-6"
                           >
                             <motion.div
@@ -385,7 +423,8 @@ export function Room() {
                             Transfer Complete!
                           </h2>
                           <p className="text-dark-muted">
-                            Your file has been received and downloaded successfully.
+                            Your file has been received and downloaded
+                            successfully.
                           </p>
                         </div>
 
@@ -393,7 +432,7 @@ export function Room() {
                         <div className="px-8 pb-8">
                           <div className="bg-dark-bg/50 rounded-xl p-5 border border-dark-border">
                             <div className="flex items-start gap-4">
-                              <div className="w-14 h-14 rounded-xl bg-dark-success/10 flex items-center justify-center flex-shrink-0">
+                              <div className="w-14 h-14 rounded-xl bg-dark-success/10 flex items-center justify-center shrink-0">
                                 <Download className="w-7 h-7 text-dark-success" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -401,9 +440,16 @@ export function Room() {
                                   {fileTransfer.receivedFile.metadata.name}
                                 </p>
                                 <div className="flex items-center gap-3 mt-1 text-sm text-dark-muted">
-                                  <span>{formatFileSize(fileTransfer.receivedFile.metadata.size)}</span>
+                                  <span>
+                                    {formatFileSize(
+                                      fileTransfer.receivedFile.metadata.size
+                                    )}
+                                  </span>
                                   <span className="w-1 h-1 rounded-full bg-dark-border" />
-                                  <span>{fileTransfer.receivedFile.metadata.type || 'Unknown type'}</span>
+                                  <span>
+                                    {fileTransfer.receivedFile.metadata.type ||
+                                      "Unknown type"}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -457,7 +503,7 @@ export function Room() {
 
                         <Card variant="default" className="p-6">
                           <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-dark-accent/10 flex items-center justify-center flex-shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-dark-accent/10 flex items-center justify-center shrink-0">
                               <Users className="w-5 h-5 text-dark-accent" />
                             </div>
                             <div>
@@ -465,9 +511,10 @@ export function Room() {
                                 Waiting for peer to connect...
                               </h3>
                               <p className="text-dark-muted text-sm leading-relaxed">
-                                Share the QR code or Room ID with the person you want to
-                                connect with. Once they scan the code or enter the Room ID,
-                                the connection will be established automatically.
+                                Share the QR code or Room ID with the person you
+                                want to connect with. Once they scan the code or
+                                enter the Room ID, the connection will be
+                                established automatically.
                               </p>
                             </div>
                           </div>
@@ -480,7 +527,11 @@ export function Room() {
                       <Card variant="glass" className="p-10 text-center">
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                           className="w-16 h-16 mx-auto mb-6 rounded-full border-2 border-dark-accent border-t-transparent"
                         />
                         <h3 className="text-xl font-semibold text-dark-text mb-2">

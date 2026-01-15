@@ -1,8 +1,8 @@
-import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
+import { cn } from "./ui/utils";
+import { formatFileSize } from "../utils/formatters";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, CheckCircle2, HardDrive } from "lucide-react";
-import { formatFileSize } from "../utils/formatters";
-import { cn } from "./ui/utils";
+import { useRef, useState, type DragEvent, type ChangeEvent } from "react";
 
 interface FileDropProps {
   onFileSelect: (file: File) => void;

@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, CameraOff, AlertCircle, Hash, QrCode, ArrowRight } from 'lucide-react';
-import { Html5Qrcode } from 'html5-qrcode';
-import type { QRCodeData } from '../types/signaling';
-import { isQRCodeData } from '../utils/validation';
 import { Button } from './ui';
+import { Html5Qrcode } from 'html5-qrcode';
+import { isQRCodeData } from '../utils/validation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { Camera, CameraOff, AlertCircle, Hash, QrCode, ArrowRight } from 'lucide-react';
+import type { QRCodeData } from '../types/signaling';
 
 interface QRCodeScannerProps {
   onScanSuccess: (data: QRCodeData) => void;
@@ -153,7 +153,7 @@ export function QRCodeScanner({ onScanSuccess, onScanError }: QRCodeScannerProps
 
                     {/* Scanning line animation */}
                     <motion.div
-                      className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-dark-accent to-transparent"
+                      className="absolute left-4 right-4 h-0.5 bg-linear-to-r from-transparent via-dark-accent to-transparent"
                       animate={{ top: ['20%', '80%', '20%'] }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     />
@@ -171,7 +171,7 @@ export function QRCodeScanner({ onScanSuccess, onScanError }: QRCodeScannerProps
                     className="mb-4"
                   >
                     <div className="bg-dark-error/10 border border-dark-error/30 text-dark-error rounded-xl p-4 text-sm flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                       <span>{error}</span>
                     </div>
                   </motion.div>

@@ -1,7 +1,7 @@
-import { motion } from 'framer-motion';
-import { Wifi, WifiOff, Loader2, CheckCircle2, AlertCircle, User } from 'lucide-react';
 import { cn } from './ui/utils';
 import { Badge } from './ui';
+import { motion } from 'framer-motion';
+import { Wifi, WifiOff, Loader2, CheckCircle2, AlertCircle, User } from 'lucide-react';
 
 interface ConnectionStatusProps {
   state: RTCPeerConnectionState;

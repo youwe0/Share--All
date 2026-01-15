@@ -1,12 +1,12 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, X } from 'lucide-react';
-import { AppProvider } from './context/AppContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { HomePage } from './components/HomePage';
-import { RoomCreator } from './components/RoomCreator';
-import { RoomJoiner } from './components/RoomJoiner';
 import { Room } from './components/Room';
+import { HomePage } from './components/HomePage';
+import { RoomJoiner } from './components/RoomJoiner';
+import { RoomCreator } from './components/RoomCreator';
+import { AppProvider } from './context/AppContext';
 import { useAppContext } from './hooks/useAppContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { AlertCircle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function AppContent() {
   const { mode, error, setError } = useAppContext();
@@ -33,7 +33,7 @@ function AppContent() {
 
               <div className="relative p-4 flex items-start gap-3">
                 {/* Icon */}
-                <div className="w-10 h-10 rounded-xl bg-dark-error/10 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-dark-error/10 flex items-center justify-center shrink-0">
                   <AlertCircle className="w-5 h-5 text-dark-error" />
                 </div>
 

@@ -1,10 +1,10 @@
+import QRCode from 'qrcode';
+import { cn } from './ui/utils';
+import { Button } from './ui';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, QrCode, Share2 } from 'lucide-react';
-import QRCode from 'qrcode';
 import type { QRCodeData } from '../types/signaling';
-import { Button } from './ui';
-import { cn } from './ui/utils';
 
 interface QRCodeDisplayProps {
   data: QRCodeData;

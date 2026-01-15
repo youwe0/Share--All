@@ -1,4 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
+import { useAppContext } from "../hooks/useAppContext";
+import { Button, Card, GridBackground, HeroGlow, Badge } from "./ui";
 import {
   ArrowRight,
   Shield,
@@ -8,9 +10,7 @@ import {
   Upload,
   QrCode,
   Server,
-} from 'lucide-react';
-import { useAppContext } from '../hooks/useAppContext';
-import { Button, Card, GridBackground, HeroGlow, Badge } from './ui';
+} from "lucide-react";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -68,7 +68,10 @@ export function HomePage() {
               className="text-xl md:text-2xl text-dark-muted max-w-2xl mx-auto mb-10"
             >
               Transfer files of any size directly between browsers.
-              <span className="text-dark-text-secondary"> No uploads. No waiting. No traces.</span>
+              <span className="text-dark-text-secondary">
+                {" "}
+                No uploads. No waiting. No traces.
+              </span>
             </motion.p>
 
             {/* CTA Buttons */}
@@ -79,7 +82,7 @@ export function HomePage() {
               <Button
                 size="lg"
                 glow
-                onClick={() => setMode('create')}
+                onClick={() => setMode("create")}
                 icon={<Upload className="w-5 h-5" />}
               >
                 Send a File
@@ -87,7 +90,7 @@ export function HomePage() {
               <Button
                 variant="outline"
                 size="lg"
-                onClick={() => setMode('join')}
+                onClick={() => setMode("join")}
                 icon={<QrCode className="w-5 h-5" />}
               >
                 Receive a File
@@ -144,31 +147,32 @@ export function HomePage() {
                 How P2P Transfer Works
               </h2>
               <p className="text-dark-muted max-w-xl mx-auto">
-                Three simple steps to transfer files directly to anyone, anywhere.
+                Three simple steps to transfer files directly to anyone,
+                anywhere.
               </p>
             </motion.div>
 
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 {
-                  step: '01',
-                  title: 'Create a Room',
+                  step: "01",
+                  title: "Create a Room",
                   description:
-                    'Generate a unique room and get a QR code to share with your recipient.',
+                    "Generate a unique room and get a QR code to share with your recipient.",
                   icon: QrCode,
                 },
                 {
-                  step: '02',
-                  title: 'Connect Directly',
+                  step: "02",
+                  title: "Connect Directly",
                   description:
-                    'Your recipient scans the QR code and establishes a direct peer-to-peer connection.',
+                    "Your recipient scans the QR code and establishes a direct peer-to-peer connection.",
                   icon: Globe,
                 },
                 {
-                  step: '03',
-                  title: 'Transfer Instantly',
+                  step: "03",
+                  title: "Transfer Instantly",
                   description:
-                    'Files transfer directly between browsers with real-time progress tracking.',
+                    "Files transfer directly between browsers with real-time progress tracking.",
                   icon: Zap,
                 },
               ].map((item, index) => (
@@ -179,7 +183,11 @@ export function HomePage() {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card variant="default" hover className="h-full relative overflow-hidden group">
+                  <Card
+                    variant="default"
+                    hover
+                    className="h-full relative overflow-hidden group"
+                  >
                     {/* Step number */}
                     <span className="absolute top-4 right-4 text-6xl font-bold text-dark-border group-hover:text-dark-accent/20 transition-colors">
                       {item.step}
@@ -223,23 +231,25 @@ export function HomePage() {
               {[
                 {
                   icon: Shield,
-                  title: 'Zero Knowledge',
-                  description: 'We never see, store, or have access to your files.',
+                  title: "Zero Knowledge",
+                  description:
+                    "We never see, store, or have access to your files.",
                 },
                 {
                   icon: Lock,
-                  title: 'WebRTC Encrypted',
-                  description: 'Military-grade DTLS encryption on all transfers.',
+                  title: "WebRTC Encrypted",
+                  description:
+                    "Military-grade DTLS encryption on all transfers.",
                 },
                 {
                   icon: Zap,
-                  title: 'No Size Limits',
-                  description: 'Transfer multi-GB files without restrictions.',
+                  title: "No Size Limits",
+                  description: "Transfer multi-GB files without restrictions.",
                 },
                 {
                   icon: Globe,
-                  title: 'Cross Platform',
-                  description: 'Works on any modern browser, any device.',
+                  title: "Cross Platform",
+                  description: "Works on any modern browser, any device.",
                 },
               ].map((feature, index) => (
                 <motion.div
@@ -250,13 +260,15 @@ export function HomePage() {
                   transition={{ delay: index * 0.1 }}
                   className="text-center p-6"
                 >
-                  <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-dark-accent/20 to-transparent flex items-center justify-center mb-4">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-linear-to-br from-dark-accent/20 to-transparent flex items-center justify-center mb-4">
                     <feature.icon className="w-7 h-7 text-dark-accent" />
                   </div>
                   <h3 className="text-lg font-semibold text-dark-text mb-2">
                     {feature.title}
                   </h3>
-                  <p className="text-dark-muted text-sm">{feature.description}</p>
+                  <p className="text-dark-muted text-sm">
+                    {feature.description}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -276,13 +288,14 @@ export function HomePage() {
                   Ready to transfer?
                 </h2>
                 <p className="text-dark-muted mb-8 max-w-lg mx-auto">
-                  Start transferring files securely in seconds. No account required.
+                  Start transferring files securely in seconds. No account
+                  required.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <Button
                     size="lg"
                     glow
-                    onClick={() => setMode('create')}
+                    onClick={() => setMode("create")}
                     icon={<ArrowRight className="w-5 h-5" />}
                     iconPosition="right"
                   >
@@ -298,7 +311,7 @@ export function HomePage() {
         <footer className="py-8 px-4 border-t border-dark-border">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-linear-to-br from-dark-accent to-dark-gradient-mid flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="font-semibold text-dark-text">P2P Share</span>

@@ -1,8 +1,20 @@
-import { motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, Clock, Zap, HardDrive, Layers } from 'lucide-react';
-import type { ChunkProgress } from '../types/transfer';
-import { formatFileSize, formatSpeed, formatETA, formatPercentage } from '../utils/formatters';
-import { cn } from './ui/utils';
+import { cn } from "./ui/utils";
+import { motion } from "framer-motion";
+import type { ChunkProgress } from "../types/transfer";
+import {
+  ArrowUp,
+  ArrowDown,
+  Clock,
+  Zap,
+  HardDrive,
+  Layers,
+} from "lucide-react";
+import {
+  formatFileSize,
+  formatSpeed,
+  formatETA,
+  formatPercentage,
+} from "../utils/formatters";
 
 interface ProgressBarProps {
   progress: ChunkProgress;
@@ -27,10 +39,8 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
             {/* Direction indicator */}
             <div
               className={cn(
-                'w-10 h-10 rounded-xl flex items-center justify-center',
-                isSending
-                  ? 'bg-dark-accent/10'
-                  : 'bg-dark-success/10'
+                "w-10 h-10 rounded-xl flex items-center justify-center",
+                isSending ? "bg-dark-accent/10" : "bg-dark-success/10"
               )}
             >
               {isSending ? (
@@ -42,10 +52,10 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
 
             <div>
               <h3 className="text-dark-text font-semibold">
-                {isSending ? 'Sending File' : 'Receiving File'}
+                {isSending ? "Sending File" : "Receiving File"}
               </h3>
               <p className="text-dark-muted text-sm">
-                {isComplete ? 'Transfer complete' : 'Transfer in progress...'}
+                {isComplete ? "Transfer complete" : "Transfer in progress..."}
               </p>
             </div>
           </div>
@@ -53,10 +63,10 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
           {/* Percentage badge */}
           <div
             className={cn(
-              'px-4 py-2 rounded-xl font-mono font-semibold text-lg',
+              "px-4 py-2 rounded-xl font-mono font-semibold text-lg",
               isComplete
-                ? 'bg-dark-success/10 text-dark-success'
-                : 'bg-dark-accent/10 text-dark-accent'
+                ? "bg-dark-success/10 text-dark-success"
+                : "bg-dark-accent/10 text-dark-accent"
             )}
           >
             {formatPercentage(percentage)}
@@ -72,23 +82,22 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
               className="h-full rounded-full relative"
               initial={{ width: 0 }}
               animate={{ width: `${percentage}%` }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
               style={{
                 background: isComplete
-                  ? 'linear-gradient(90deg, #10b981, #34d399)'
-                  : 'linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4)',
-                backgroundSize: '200% 100%',
+                  ? "linear-gradient(90deg, #10b981, #34d399)"
+                  : "linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4)",
+                backgroundSize: "200% 100%",
               }}
             >
               {/* Shimmer effect */}
               {!isComplete && (
-                <div
-                  className="absolute inset-0 overflow-hidden rounded-full"
-                >
+                <div className="absolute inset-0 overflow-hidden rounded-full">
                   <div
                     className="absolute inset-0 -translate-x-full animate-shimmer"
                     style={{
-                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                      background:
+                        "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
                     }}
                   />
                 </div>
@@ -99,8 +108,8 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
                 className="absolute inset-0 rounded-full"
                 style={{
                   boxShadow: isComplete
-                    ? '0 0 20px rgba(16, 185, 129, 0.5)'
-                    : '0 0 20px rgba(59, 130, 246, 0.5)',
+                    ? "0 0 20px rgba(16, 185, 129, 0.5)"
+                    : "0 0 20px rgba(59, 130, 246, 0.5)",
                 }}
               />
             </motion.div>
@@ -163,7 +172,7 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
               <span className="text-xs uppercase tracking-wider">ETA</span>
             </div>
             <p className="text-dark-text font-mono text-sm">
-              {isComplete ? 'Done!' : formatETA(progress.eta)}
+              {isComplete ? "Done!" : formatETA(progress.eta)}
             </p>
           </div>
         </div>
@@ -175,8 +184,8 @@ export function ProgressBar({ progress, isSending }: ProgressBarProps) {
               <motion.div
                 key={i}
                 className={cn(
-                  'w-2 h-2 rounded-full',
-                  isSending ? 'bg-dark-accent' : 'bg-dark-success'
+                  "w-2 h-2 rounded-full",
+                  isSending ? "bg-dark-accent" : "bg-dark-success"
                 )}
                 animate={{
                   opacity: [0.3, 1, 0.3],
