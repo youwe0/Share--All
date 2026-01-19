@@ -157,8 +157,6 @@ Requires: WebRTC, WebSocket, FileReader API, Blob API
 
 ## Development Guidelines
 
-See [claude.md](claude.md) for:
-
 - Code must be modular
 - UI must use dark theme
 - NO `any` data types (strict TypeScript)
